@@ -10,10 +10,10 @@
     "type": "git",
     "url": "https://github.com/nutella-framework/nutella_lib.js"
   },
-	"devDependencies": {
-		"chai" : "*",
-		"mocha" : "*"
-	},
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*"
+  },
   "keywords": [
     "nutella",
     "framework"
@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/nutella-framework/nutella_lib.js/issues"
   },
-  "homepage": "https://github.com/nutella-framework/nutella_lib.js"
+  "homepage": "https://github.com/nutella-framework/nutella_lib.js",
+  "dependencies": {
+    "simple-js-mqtt-client": "*"
+  }
 }
