@@ -1,6 +1,8 @@
-JavaScript nutella library
+[![Build Status](https://travis-ci.org/nutella-framework/nutella_lib.js.svg?branch=master)](https://travis-ci.org/nutella-framework/nutella_lib.js)
 
-# Installation
+# nutella library for node.js and the browser
+
+## Installation
 On node.js do
 ```
 npm install nutella_lib
