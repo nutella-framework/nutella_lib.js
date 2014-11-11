@@ -1,0 +1,6 @@
+{
+	"name": "nutella_lib.js",
+	"version": "0.1.0",
+	"type": "interface",
+	"description": "A fake nutella.json file to verify nutella_lib.js parses it correctly"
+}

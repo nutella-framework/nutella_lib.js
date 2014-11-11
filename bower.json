@@ -23,7 +23,7 @@
     "test",
     "tests"
   ],
-	"dependencies": {
-	    "simple-js-mqtt-client": "*"
-	}
+  "dependencies": {
+    "simple-js-mqtt-client": "*"
+  }
 }
