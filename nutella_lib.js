@@ -55,7 +55,7 @@
 		}
 		// Connect to MQTT. Id generated randomly.
 		// TODO, change this to read from nutella.json
-		nutella.actor_name = MQTT.connect(params.broker,function() {
+		nutella.actor_name = MQTT.connect(params.broker, function() {
 			// Once connection is established, we can execute operations on it
 			nutella.initialized = true;
 			if (callback!==undefined) {
@@ -97,7 +97,7 @@
 	// Subscribe to a channel
   // The callback takes one parameter and that is the message that is received.
   // Messages that are not JSON are discarded.
- 	nutella.subscribe = function(channel, callback) {
+ 	nutella.subscribe = function(channel, callback, done_callback) {
 		// Check nutella is initialized
 		if (!nutella.initialized) {
 			console.warn("Can't call any methods because nutella is not initialized");
@@ -115,15 +115,15 @@
 			catch(err) {
 				// do nothing, just discard the message
 			}
-		});
+		}, done_callback);
  	}
 	
 	// Unsubscribe from a channel
-	nutella.unsubscribe = function(channel) {
+	nutella.unsubscribe = function(channel, done_callback) {
     // Pad the channel
     var new_channel = nutella.run_id + '/' + channel;
     // Unsubscribe
-    MQTT.unsubscribe(new_channel);	
+    MQTT.unsubscribe(new_channel, done_callback);	
 	}
 	
 	
@@ -148,9 +148,9 @@
 	// string (the string will be wrapped into a JSON string automatically. Format: {"payload":"<message>"})
 	// hash (the hash will be converted into a JSON string automatically)
 	// json string (the JSON string will be sent as is)
-	
-	nutella.request = function(channel, message, callback) {
+	nutella.request = function(channel, message, callback, done_callback) {
     if (Object.prototype.toString.call(message) == "[object Function]") {
+			done_callback = callback;
       callback = message;
 			message = undefined;
     }
@@ -166,15 +166,19 @@
 			if (res.id===id) {
         if (ready_to_go) {
 					nutella.unsubscribe(channel);
-					console.debug("unsubscribed")
+					callback(res);
         } else {
         	ready_to_go = true;
-					console.debug("flagging us")
         }
 			}
-		});
-    // Send message
-    nutella.publish(channel, payload);
+		}, function() {
+	    // Send message
+	    nutella.publish(channel, payload);
+			// If there is a done_callback defined, execute it
+			if (done_callback!==undefined) {
+				done_callback();
+			}
+		}); 
 	}
 	
 		
