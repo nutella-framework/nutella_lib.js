@@ -1,7 +1,7 @@
 {
   "name": "nutella_lib",
   "main": "nutella_lib.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "authors": [
     "Alessandro Gnoli <tebemis@gmail.com>"
   ],
@@ -24,6 +24,6 @@
     "tests"
   ],
   "dependencies": {
-    "simple-js-mqtt-client": "*"
+    "simple-js-mqtt-client": ">=0.4.0"
   }
 }

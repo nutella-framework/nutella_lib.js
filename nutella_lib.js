@@ -35,7 +35,7 @@
   }
  
   // Current version.
-  nutella.VERSION = '0.1.0';
+  nutella.VERSION = '0.2.0';
 	
 	// Mark nutella instance as un-initialized
 	nutella.initialized = false;
