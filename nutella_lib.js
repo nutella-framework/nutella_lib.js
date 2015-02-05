@@ -3,45 +3,48 @@
 (function() {
 	"use strict";
  
-  // Establish the root object, `window` in the browser, or `exports` on the server.
-  var root = this;
- 
-  // Save the previous value of the `nutella` variable for noConflict().
-  var previousNutella = root.nutella;
-  
-  // Create a safe reference to the nutella object for use below.
-  var nutella = function(obj) {
-    if (obj instanceof 'nutella') return obj;
-    if (!(this instanceof 'nutella')) return new 'nutella'(obj);
-    this._wrapped = obj;
-  };
-	
+	// Establish the root object, `window` in the browser, or `exports` on the server.
+	var root = this;
+
+	// Save the previous value of the `nutella` variable for noConflict().
+	var previousNutella = root.nutella;
+
+	// Create a safe reference to the nutella object for use below.
+	var nutella = function(obj) {
+		if (obj instanceof 'nutella') return obj;
+		if (!(this instanceof 'nutella')) return new 'nutella' (obj);
+		this._wrapped = obj;
+	};
+
+	// Contain the list of functions that observe a certain channel
+	nutella.subscriberObserver = {};
+
 	// No conflict method
 	nutella.noConflict = function() {
-	  root.nutella = previousNutella
-	  return nutella
+		root.nutella = previousNutella
+		return nutella
 	};
- 
-  // Export the nutella object for node.js, with
-  // backwards-compatibility for the old `require()` API. If we're in
-  // the browser, add `nutella` as a global object.
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = nutella;
-    }
-    exports.nutella = nutella;
-  } else {
-    root.nutella = nutella;
-  }
- 
-  // Current version.
-  nutella.VERSION = '0.2.0';
+
+	// Export the nutella object for node.js, with
+	// backwards-compatibility for the old `require()` API. If we're in
+	// the browser, add `nutella` as a global object.
+	if (typeof exports !== 'undefined') {
+		if (typeof module !== 'undefined' && module.exports) {
+			exports = module.exports = nutella;
+		}
+		exports.nutella = nutella;
+	} else {
+		root.nutella = nutella;
+	}
+
+	// Current version.
+	nutella.VERSION = '0.2.0';
 	
 	// Mark nutella instance as un-initialized
 	nutella.initialized = false;
  
  
-  // Test function
+	// Test function
 	nutella.test = function(param) {
 		return "test"
 	};
@@ -71,12 +74,12 @@
 	function parseURLParams(str) {
 		var queries = str.replace(/^\?/, '').split('&');
 		var searchObject = {};
-    for( var i = 0; i < queries.length; i++ ) {
-        var split = queries[i].split('=');
-        searchObject[split[0]] = split[1];
-    }
+		for (var i = 0; i < queries.length; i++) {
+			var split = queries[i].split('=');
+			searchObject[split[0]] = split[1];
+		}
 		// Check if run_id and broker are defined
-		if (searchObject.run_id===undefined || searchObject.broker===undefined) {
+		if (searchObject.run_id === undefined || searchObject.broker === undefined) {
 			return undefined;
 		}
 		nutella.run_id = searchObject.run_id;
@@ -94,37 +97,74 @@
 	
 	
 	// TODO put these functions into a separate submodule
-	
+
+	nutella.messageArrived = function(channel, message) {
+		// Make sure the message is JSON, if not drop the message
+		try {
+			var message_obj = JSON.parse(message);
+			for(var c in nutella.subscriberObserver[channel]) {
+				var callback = nutella.subscriberObserver[channel][c];
+				callback(message_obj);
+			}	
+		} catch (err) {
+			// do nothing, just discard the message
+		}
+	}
+
 	// Subscribe to a channel
-  // The callback takes one parameter and that is the message that is received.
-  // Messages that are not JSON are discarded.
- 	nutella.subscribe = function(channel, callback, done_callback) {
+	// The callback takes one parameter and that is the message that is received.
+	// Messages that are not JSON are discarded.
+	nutella.subscribe = function(channel, callback, done_callback) {
 		// Check nutella is initialized
 		if (!nutella.initialized) {
 			console.warn("Can't call any methods because nutella is not initialized");
 			return;
 		}
-		// Pad the channel
-		var new_channel = nutella.run_id + '/' + channel;
-		// Subscribe
-		MQTT.subscribe(new_channel, function(message) {
-			// Make sure the message is JSON, if not drop the message
-			try {
-				var message_obj = JSON.parse(message);
-				callback(message_obj);
-			}
-			catch(err) {
-				// do nothing, just discard the message
-			}
-		}, done_callback);
+
+		if(nutella.subscriberObserver[channel] == null) {
+			nutella.subscriberObserver[channel] = [];
+		}
+
+		if (nutella.subscriberObserver[channel].length == 0) {
+			// Pad the channel
+			var new_channel = nutella.run_id + '/' + channel;
+			// Subscribe
+			MQTT.subscribe(new_channel, function(message) {
+				nutella.messageArrived(channel, message);
+			}, done_callback);
+
+			nutella.subscriberObserver[channel].push(callback);
+		} else {
+			nutella.subscriberObserver[channel].push(callback);
+			done_callback();
+		}
  	}
 	
-	// Unsubscribe from a channel
+	// Unsubscribe from a channel (delete all observers)
 	nutella.unsubscribe = function(channel, done_callback) {
-    // Pad the channel
-    var new_channel = nutella.run_id + '/' + channel;
-    // Unsubscribe
-    MQTT.unsubscribe(new_channel, done_callback);	
+		// Pad the channel
+		var new_channel = nutella.run_id + '/' + channel;
+		// Delete all observers
+		nutella.subscriberObserver[channel] = [];
+		// Unsubscribe
+		MQTT.unsubscribe(new_channel, done_callback);
+	}
+
+	// Unsubscribe from a channel only the spefified callback
+	nutella.unsubscribe_callback = function(channel, callback_to_delete, done_callback) {
+		var index = nutella.subscriberObserver.indexOf(callback_to_delete);
+
+		if(index != -1) {
+			// Delete the observer
+			nutella.subscriberObserver.splice(index, 1);
+		}
+
+		if(nutella.subscriberObserver.length == 0) {
+			nutella.unsubscribe(channel, done_callback)
+		}
+		else {
+			done_callback();
+		}
 	}
 	
 	
@@ -135,8 +175,8 @@
 	// object (the object will be converted into a JSON string automatically)
 	// json string (the JSON string will be sent as is)
 	nutella.publish = function(channel, message) {
-    // Pad the channel
-    var new_channel = nutella.run_id + '/' + channel;
+		// Pad the channel
+		var new_channel = nutella.run_id + '/' + channel;
 		// Publish
 		var m = attach_to_message(message, "from", nutella.actor_name);
 		MQTT.publish(new_channel, m);
@@ -150,36 +190,36 @@
 	// hash (the hash will be converted into a JSON string automatically)
 	// json string (the JSON string will be sent as is)
 	nutella.request = function(channel, message, callback, done_callback) {
-    if (Object.prototype.toString.call(message) == "[object Function]") {
+		if (Object.prototype.toString.call(message) == "[object Function]") {
 			done_callback = callback;
-      callback = message;
+			callback = message;
 			message = undefined;
-    }
-    // Generate unique id for request
-    var id = Math.floor(Math.random()*10000);
-    // Attach id
+		}
+		// Generate unique id for request
+		var id = Math.floor(Math.random() * 10000);
+		// Attach id
 		var payload = attach_to_message(message, "id", id);
-    //Initialize flag that prevents handling of our own messages
-    var ready_to_go = false
-    //Register callback to handle data the request response whenever it comes
+		//Initialize flag that prevents handling of our own messages
+		var ready_to_go = false
+			//Register callback to handle data the request response whenever it comes
 		nutella.subscribe(channel, function(res) {
 			// Check that the message we receive is not the one we are sending ourselves.
-			if (res.id===id) {
-        if (ready_to_go) {
+			if (res.id === id) {
+				if (ready_to_go) {
 					nutella.unsubscribe(channel);
 					callback(res);
-        } else {
-        	ready_to_go = true;
-        }
+				} else {
+					ready_to_go = true;
+				}
 			}
 		}, function() {
-	    // Send message
-	    nutella.publish(channel, payload);
+			// Send message
+			nutella.publish(channel, payload);
 			// If there is a done_callback defined, execute it
-			if (done_callback!==undefined) {
+			if (done_callback !== undefined) {
 				done_callback();
 			}
-		}); 
+		});
 	}
 	
 		
