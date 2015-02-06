@@ -136,7 +136,9 @@
 			nutella.subscriberObserver[channel].push(callback);
 		} else {
 			nutella.subscriberObserver[channel].push(callback);
-			done_callback();
+			if (done_callback !== undefined) {
+				done_callback();
+			}
 		}
  	}
 	
@@ -152,18 +154,20 @@
 
 	// Unsubscribe from a channel only the spefified callback
 	nutella.unsubscribe_callback = function(channel, callback_to_delete, done_callback) {
-		var index = nutella.subscriberObserver.indexOf(callback_to_delete);
+		var index = nutella.subscriberObserver[channel].indexOf(callback_to_delete);
 
 		if(index != -1) {
 			// Delete the observer
-			nutella.subscriberObserver.splice(index, 1);
+			nutella.subscriberObserver[channel].splice(index, 1);
 		}
 
-		if(nutella.subscriberObserver.length == 0) {
+		if(nutella.subscriberObserver[channel].length == 0) {
 			nutella.unsubscribe(channel, done_callback)
 		}
 		else {
-			done_callback();
+			if (done_callback !== undefined) {
+				done_callback();
+			}
 		}
 	}
 	
@@ -200,19 +204,24 @@
 		// Attach id
 		var payload = attach_to_message(message, "id", id);
 		//Initialize flag that prevents handling of our own messages
-		var ready_to_go = false
-			//Register callback to handle data the request response whenever it comes
-		nutella.subscribe(channel, function(res) {
+		var ready_to_go = false;
+
+		//Register callback to handle data the request response whenever it comes
+
+		var replyCallback;
+		replyCallback = function(res) {
 			// Check that the message we receive is not the one we are sending ourselves.
 			if (res.id === id) {
 				if (ready_to_go) {
-					nutella.unsubscribe(channel);
+					nutella.unsubscribe_callback(channel, replyCallback);
 					callback(res);
 				} else {
 					ready_to_go = true;
 				}
 			}
-		}, function() {
+		};
+
+		nutella.subscribe(channel, replyCallback, function() {
 			// Send message
 			nutella.publish(channel, payload);
 			// If there is a done_callback defined, execute it
@@ -220,7 +229,7 @@
 				done_callback();
 			}
 		});
-	}
+	};
 	
 		
 	function attach_to_message(message, key, val) {
