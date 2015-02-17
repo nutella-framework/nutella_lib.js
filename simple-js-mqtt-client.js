@@ -102,7 +102,7 @@
 		// Register incoming message callback
 		client.on('message', function(channel, message) {
 			// Executes the appropriate channel callback
-			var cb = findCallback(subscriptions, channel);
+			var cbs = findCallbacks(subscriptions, channel);
 			if (cb!==undefined) {
 					Object.keys(subscriptions).indexOf(channel)!==-1 ? cb(message) : cb(message, channel);
 			}
@@ -130,9 +130,16 @@
 		// Register callback for received message
 		client.onMessageArrived = function (message) {
 			// Executes the appropriate channel callback
-			var cb = findCallback(subscriptions, message.destinationName);
-			if (cb!==undefined) {
-					Object.keys(subscriptions).indexOf(message.destinationName)!==-1 ? cb(message.payloadString) : cb(message.payloadString, message.destinationName);
+			var cbs = findCallbacks(subscriptions, message.destinationName);
+			if (cbs!==undefined) {
+					if (Object.keys(subscriptions).indexOf(message.destinationName)!==-1)
+                        cbs.forEach(function(cb) {
+                            cb(message.payloadString);
+                        });
+                    else
+                        cbs.forEach(function(cb) {
+                            cb(message.payloadString, message.destinationName);
+                        });
 			}
 		};
 		// Connect
@@ -202,16 +209,15 @@
 	//
 	function subscribeBrowser (client, subscriptions, backlog, channel, callback, done_callback) {
 		if ( addToBacklog(client, backlog, subscribeBrowser, [client, subscriptions, backlog, channel, callback, done_callback]) ) return;
-		var options = {};
-		options.qos = 0;
-		options.onSuccess = function() {
-			subscriptions[channel] = callback;
-			// If there is a done_callback defined, execute it
-			if (done_callback!==undefined) {
-				done_callback();
-			}
-		};
-		client.subscribe(channel, options);
+        if (subscriptions[channel]===undefined) {
+            subscriptions[channel] = [callback];
+            client.subscribe(channel, {qos: 0, onSuccess: function() {
+                // If there is a done_callback defined, execute it
+                if (done_callback!==undefined) done_callback();
+            }});
+        } else {
+            subscriptions[channel].push(callback);
+        }
 	}
 
 
@@ -222,11 +228,11 @@
 	 * @param {string} channel  - the channel we are unsubscribing from.
 	 * @param {callback} [done_callback] - A function that is executed once the unsubscribe operation has completed successfully.
 	 */
-	SimpleMQTTClient.prototype.unsubscribe = function (channel, done_callback) {
+	SimpleMQTTClient.prototype.unsubscribe = function (channel, callback, done_callback) {
 		if( isNode )
 			unsubscribeNode(channel, done_callback);
 		else
-            unsubscribeBrowser(this.client, this.subscriptions, this.backlog, channel, done_callback);
+            unsubscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
 	};
 
 
@@ -249,17 +255,18 @@
     //
 	// Helper function that unsubscribes from a channel in the browser
     //
-	var unsubscribeBrowser = function(client, subscriptions, backlog, channel, done_callback) {
-		if ( addToBacklog(client, backlog, unsubscribeBrowser, [client, subscriptions, backlog, channel, done_callback]) ) return;
-		var options = {};
-		options.onSuccess = function() {
-			delete subscriptions[channel];
-			// If there is a done_callback defined, execute it
-			if (done_callback!==undefined) {
-				done_callback();
-			}
-		};
-		client.unsubscribe(channel, options);
+	var unsubscribeBrowser = function(client, subscriptions, backlog, channel, callback, done_callback) {
+		if ( addToBacklog(client, backlog, unsubscribeBrowser, [client, subscriptions, backlog, channel, callback, done_callback]) ) return;
+        if (subscriptions[channel]===undefined)
+            return;
+        subscriptions[channel].splice(subscriptions[channel].indexOf(callback), 1);
+        if (subscriptions[channel].length===0) {
+            delete subscriptions[channel];
+            client.unsubscribe(channel, {onSuccess : function() {
+                // If there is a done_callback defined, execute it
+                if (done_callback!==undefined) done_callback();
+            }});
+        }
 	};
 
 
@@ -329,7 +336,7 @@
     //
     // Helper function that selects the right callback when a message is received
     //
-    function findCallback (subscriptions, channel) {
+    function findCallbacks (subscriptions, channel) {
         // First try to see if a callback for the exact channel exists
         if(Object.keys(subscriptions).indexOf(channel)!==-1)
             return subscriptions[channel];

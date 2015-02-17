@@ -14,9 +14,11 @@
     client.subscribe('demo1', function(message){
         console.log("First subscription: " + message);
     });
-    client.subscribe('demo1', function(message){
+    var sscb = function(message){
         console.log("Second subscription: " + message);
-    });
+        client.unsubscribe('demo1', sscb);
+    };
+    client.subscribe('demo1', sscb);
 </script>
 </body>
 </html>
