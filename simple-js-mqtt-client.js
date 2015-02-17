@@ -14,10 +14,6 @@
     // Internal reference to this library (used below)
     var mqtt = {};
 
-	// Load dependencies (mqtt libraries)
-	// adamvr/MQTT.js for node (https://github.com/adamvr/MQTT.js)
-	// Paho.js, via mqtt-ws, for the browser (https://github.com/M2MConnections/mqtt-ws)
-
 	// Detect if we are in the browser or in node and
     // load the appropriate dependencies
     var isNode;
@@ -93,27 +89,28 @@
 
 	//
 	// Helper function that connects the MQTT client in node
-    // TODO refactor
 	//
 	function connectNode (subscriptions, backlog, host, clientId) {
 		// Create client
 		var url = "tcp://" + host + ":1883";
-		var client = mqtt.connect(url, {clientId : clientId});
+		var client = mqtt_lib.connect(url, {clientId : clientId});
 		// Register incoming message callback
 		client.on('message', function(channel, message) {
 			// Executes the appropriate channel callback
 			var cbs = findCallbacks(subscriptions, channel);
-			if (cb!==undefined) {
-					Object.keys(subscriptions).indexOf(channel)!==-1 ? cb(message) : cb(message, channel);
+			if (cbs!==undefined) {
+					if (Object.keys(subscriptions).indexOf(channel)!==-1)
+                        cbs.forEach(function(cb) {
+                            cb(message);
+                        });
+                    else
+                        cbs.forEach(function(cb) {
+                            cb(message, channel);
+                        });
+
 			}
 		});
-		// Register successful connection callback
-		client.on('connect', function() {
-			// Execute the backlog of operations performed while the client wasn't connected
-			backlog.forEach(function(e) {
-				e.op.apply(this, e.params);
-			});
-		});
+        return client;
 	}
 
 
@@ -175,11 +172,6 @@
 	 * @param {callback} [done_callback] - A function that is executed once the subscribe operation has completed successfully.
 	 */
 	SimpleMQTTClient.prototype.subscribe = function (channel, callback, done_callback) {
-		// Prevent from subscribing twice to a channel
-		if (Object.keys(this.subscriptions).indexOf(channel)!==-1) {
-			console.error("You can only subscribe to a channel once");
-			return;
-		}
 		// Subscribe
 		if( isNode )
 			subscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
@@ -190,17 +182,17 @@
 
 	//
 	// Helper function that subscribes to a channel in node
-    // TODO refactor
 	//
-	function subscribeNode (channel, callback, done_callback) {
-		var onSuccess = function(err, granted) {
-			subscriptions[channel] = callback;
-			// If there is a done_callback defined, execute it
-			if (done_callback!==undefined) {
-				done_callback();
-			}
-		};
-		n_client.subscribe(channel, {qos : 0}, onSuccess);
+	function subscribeNode (client, subscriptions, backlog, channel, callback, done_callback) {
+        if (subscriptions[channel]===undefined) {
+            subscriptions[channel] = [callback];
+            client.subscribe(channel, {qos: 0}, function() {
+                // If there is a done_callback defined, execute it
+                if (done_callback!==undefined) done_callback();
+            });
+        } else {
+            subscriptions[channel].push(callback);
+        }
 	}
 
 
@@ -226,11 +218,12 @@
 	 * Unsubscribe from a channel.
      *
 	 * @param {string} channel  - the channel we are unsubscribing from.
+     * @param {function} callback  - the callback we are trying to unregister
 	 * @param {callback} [done_callback] - A function that is executed once the unsubscribe operation has completed successfully.
 	 */
 	SimpleMQTTClient.prototype.unsubscribe = function (channel, callback, done_callback) {
 		if( isNode )
-			unsubscribeNode(channel, done_callback);
+			unsubscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
 		else
             unsubscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
 	};
@@ -238,17 +231,18 @@
 
     //
 	// Helper function that unsubscribes from a channel in node
-    // TODO refactor
     //
-	var unsubscribeNode = function(channel, done_callback) {
-		var onSuccess = function() {
-			delete subscriptions[channel];
-			// If there is a done_callback defined, execute it
-			if (done_callback!==undefined) {
-				done_callback();
-			}
-		};
-		n_client.unsubscribe(channel, onSuccess);
+	var unsubscribeNode = function(client, subscriptions, backlog, channel, callback, done_callback) {
+        if (subscriptions[channel]===undefined)
+            return;
+        subscriptions[channel].splice(subscriptions[channel].indexOf(callback), 1);
+        if (subscriptions[channel].length===0) {
+            delete subscriptions[channel];
+            client.unsubscribe(channel, function() {
+                // If there is a done_callback defined, execute it
+                if (done_callback!==undefined) done_callback();
+            });
+        }
 	};
 
 
@@ -288,7 +282,7 @@
      */
     SimpleMQTTClient.prototype.publish = function (channel, message) {
         if (isNode)
-            publishNode(channel, message)
+            publishNode(this.client, this.backlog, channel, message)
         else
             publishBrowser(this.client, this.backlog, channel, message)
     };
@@ -296,10 +290,9 @@
 
 	//
 	// Helper function that publishes to a channel in node
-    // TODO refactor
 	//
-	var publishNode = function (channel, message) {
-		n_client.publish(channel, message)
+	var publishNode = function (client, backlog, channel, message) {
+        client.publish(channel, message);
 	};
 
 
@@ -418,7 +411,7 @@
 
 
  	// Exports mqtt object
-	// For node.js, also with backwards-compatibility for the old `require()` API.
+	// For mqtt_client.js, also with backwards-compatibility for the old `require()` API.
 	// If we're in the browser, add `MQTT` as a global object.
  	if (typeof exports !== 'undefined') {
  		if (typeof module !== 'undefined' && module.exports) {
