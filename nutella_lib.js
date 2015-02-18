@@ -124,9 +124,9 @@
 
 
 
-    //
+    // --------------------------------------------------------------------------------------------
     // net sub-module
-    //
+    // --------------------------------------------------------------------------------------------
 
 
     var NetSubModule = function(main_nutella) {
@@ -139,10 +139,11 @@
     };
 
 
+
     /**
-     * Subscribes a channel or a filter
+     * Subscribes to a channel or filter.
      *
-     * @param channel
+     * @param channel/filter
      * @param callback
      * @param done_callback
      */
@@ -187,8 +188,23 @@
     };
 
 
-    NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
 
+    /**
+     * Unsubscribes from a channel
+     *
+     * @param channel
+     * @param done_callback
+     */
+    NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
+        // Find index of subscription and retrieve relative callback
+        var idx = this.subscriptions.indexOf(channel);
+        var cbAtIdx = this.callbacks[idx];
+        // Pad the channel
+        var new_channel = this.main_nutella.run_id + '/' + channel;
+        // Unsubscribe
+        this.subscriptions.splice(idx, 1);
+        this.callbacks.splice(idx, 1);
+        this.main_nutella.mqtt_client.unsubscribe(new_channel, cbAtIdx, done_callback);
     };
 
 
@@ -207,6 +223,7 @@
     };
 
 
+
     //
     // Helper function
     // Extracts nutella parameters from a received message
@@ -223,133 +240,6 @@
 
 
 
-
-
-
-    // TODO put these functions into a separate sub-module
-
-    // Subscribe to a channel
-    // The callback takes one parameter and that is the message that is received.
-    // Messages that are not JSON are discarded.
-    nutella.subscribe = function(channel, callback, done_callback) {
-        // Check nutella is initialized
-        if (!nutella.initialized) {
-            console.warn("Can't call any methods because nutella is not initialized");
-            return;
-        }
-        // Pad the channel
-        var new_channel = nutella.run_id + '/' + channel;
-        // Subscribe
-        MQTT.subscribe(new_channel, function(message) {
-            // Make sure the message is JSON, if not drop the message
-            try {
-                var message_obj = JSON.parse(message);
-                callback(message_obj);
-            }
-            catch(err) {
-                // do nothing, just discard the message
-            }
-        }, done_callback);
-    }
-
-    // Unsubscribe from a channel
-    nutella.unsubscribe = function(channel, done_callback) {
-        // Pad the channel
-        var new_channel = nutella.run_id + '/' + channel;
-        // Unsubscribe
-        MQTT.unsubscribe(new_channel, done_callback);
-    }
-
-
-    // Publishes a message to a channel
-    // Message can be:
-    // empty (optional parameter)
-    // string (the string will be wrapped into a JSON string automatically. Format: {"payload":"<message>"})
-    // object (the object will be converted into a JSON string automatically)
-    // json string (the JSON string will be sent as is)
-    nutella.publish = function(channel, message) {
-        // Pad the channel
-        var new_channel = nutella.run_id + '/' + channel;
-        // Publish
-        var m = attach_to_message(message, "from", nutella.actor_name);
-        MQTT.publish(new_channel, m);
-    }
-
-
-    // Performs an asynchronous request
-    // Message can be:
-    // empty (equivalent of a GET)
-    // string (the string will be wrapped into a JSON string automatically. Format: {"payload":"<message>"})
-    // hash (the hash will be converted into a JSON string automatically)
-    // json string (the JSON string will be sent as is)
-    nutella.request = function(channel, message, callback, done_callback) {
-        if (Object.prototype.toString.call(message) == "[object Function]") {
-            done_callback = callback;
-            callback = message;
-            message = undefined;
-        }
-        // Generate unique id for request
-        var id = Math.floor(Math.random()*10000);
-        // Attach id
-        var payload = attach_to_message(message, "id", id);
-        //Initialize flag that prevents handling of our own messages
-        var ready_to_go = false
-        //Register callback to handle data the request response whenever it comes
-        nutella.subscribe(channel, function(res) {
-            // Check that the message we receive is not the one we are sending ourselves.
-            if (res.id===id) {
-                if (ready_to_go) {
-                    nutella.unsubscribe(channel);
-                    callback(res);
-                } else {
-                    ready_to_go = true;
-                }
-            }
-        }, function() {
-            // Send message
-            nutella.publish(channel, payload);
-            // If there is a done_callback defined, execute it
-            if (done_callback!==undefined) {
-                done_callback();
-            }
-        });
-    }
-
-
-    function attach_to_message(message, key, val) {
-        var payload;
-        if (message===undefined) {
-            var p = {};
-            p[key] = val;
-            payload = JSON.stringify(p);
-        } else if (is_json_string(message)) {
-            var p = JSON.parse(message);
-            p[key] = val;
-            payload = JSON.stringify(p);
-        } else if (typeof message === 'string') {
-            var p = {};
-            p.payload = message;
-            p[key] = val;
-            payload = JSON.stringify(p);
-        } else {
-            // any other object
-            message[key] = val;
-            payload = JSON.stringify(message);
-        }
-        return payload;
-    }
-
-    function is_json_string(str) {
-        try {
-            JSON.parse(str);
-        } catch(e) {
-            return false;
-        }
-        return true;
-    }
-
-
-
     //
     // Helper function to test if a channel is wildcard or not.
     // Returns true if it is Returns true is.
@@ -361,17 +251,15 @@
     }
 
 
-
-
     //
     // END OF: net sub-module
     //
 
 
 
-    //
+    // --------------------------------------------------------------------------------------------
     // persist sub-module
-    //
+    // --------------------------------------------------------------------------------------------
 
 
     var PersistSubModule = function(main_nutella) {
@@ -395,9 +283,9 @@
 
 
 
-    //
+    // --------------------------------------------------------------------------------------------
     // Simple MQTT client
-    //
+    // --------------------------------------------------------------------------------------------
 
 
     /**
