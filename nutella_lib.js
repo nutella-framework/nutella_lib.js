@@ -78,7 +78,7 @@
      */
     nutella.init = function(run_id, broker_hostname, component_id) {
         if (run_id===undefined || broker_hostname===undefined || component_id=== undefined) {
-            console.warn("Couldn't initialize nutella. Make sure you are setting all three the required parameters (run_id, broker_hostname, component_id'");
+            console.warn("Couldn't initialize nutella. Make sure you are setting all three the required parameters (runId, broker_hostname, componentId'");
         }
         return new NutellaInstance(run_id, broker_hostname, component_id);
     };
@@ -95,8 +95,8 @@
     var NutellaInstance = function (run_id, broker_hostname, component_id) {
 
         this.mqtt_client = new SimpleMQTTClient(broker_hostname);
-        this.run_id = run_id;
-        this.component_id = component_id;
+        this.runId = run_id;
+        this.componentId = component_id;
 
         // Initialized the various sub-modules
         this.net = new NetSubModule(this);
@@ -111,8 +111,8 @@
      *
      * @param {string} resourceId - the resource_id associated to this instance of nutella
      */
-    NutellaInstance.prototype.setResourceId = function(resourceId){
-        this.resourceId = resourceId;
+    NutellaInstance.prototype.setResourceId = function(resource_id){
+        this.resourceId = resource_id;
     };
 
 
@@ -152,8 +152,8 @@
         if (this.subscriptions.indexOf(channel)!==-1)
             throw new Error('You can`t subscribe twice to the same channel');
         // Pad the channel
-        var run_id = this.main_nutella.run_id;
-        var new_channel = run_id + '/' + channel;
+        var runId = this.main_nutella.runId;
+        var new_channel = runId + '/' + channel;
         // Define callbacks
         var mqtt_cb;
         if (isChannelWildcard(channel))
@@ -162,7 +162,7 @@
                 // doesn't comply to the nutella protocol
                 try {
                     var f = extractFieldsFromMessage(mqtt_message);
-                    var clean_channel = mqtt_channel.replace(run_id+'/', '');
+                    var clean_channel = mqtt_channel.replace(runId+'/', '');
                     if (f.type==='publish')
                         callback(f.payload, clean_channel, f.componentId, f.resourceId);
                 } catch(err) {
@@ -200,7 +200,7 @@
         var idx = this.subscriptions.indexOf(channel);
         var cbAtIdx = this.callbacks[idx];
         // Pad the channel
-        var new_channel = this.main_nutella.run_id + '/' + channel;
+        var new_channel = this.main_nutella.runId + '/' + channel;
         // Unsubscribe
         this.subscriptions.splice(idx, 1);
         this.callbacks.splice(idx, 1);
@@ -217,9 +217,9 @@
      */
     NetSubModule.prototype.publish = function(channel, message) {
         // Pad the channel
-        var new_channel = this.main_nutella.run_id + '/' + channel;
+        var new_channel = this.main_nutella.runId + '/' + channel;
         try {
-            var m = prepareMessageForPublish(message, this.main_nutella.component_id, this.main_nutella.resourceId);
+            var m = prepareMessageForPublish(message, this.main_nutella.componentId, this.main_nutella.resourceId);
             this.main_nutella.publish(new_channel, m);
         } catch (err) {
             console.error(err);
@@ -263,7 +263,7 @@
         if (message===undefined)
             return {type: 'publish', from: from};
         /*
-         from = Nutella.resource_id.nil? ? Nutella.component_id : "#{Nutella.component_id}/#{Nutella.resource_id}"
+         from = Nutella.resource_id.nil? ? Nutella.componentId : "#{Nutella.componentId}/#{Nutella.resource_id}"
          if message.nil?
          return {type: 'publish', from: from}.to_json
          end
