@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Nutella hello world</title>
+</head>
+<body>
+
+<script src="bower_components/bower-mqttws/mqttws31.js"></script>
+<script src="../../nutella_lib.js"></script>
+<script>
+    var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');
+    nutella.net.subscribe("pippo");
+
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
  * Simple MQTT client *
  **********************/
 
-(function () {
+(function() {
 	"use strict";
 
 	// Establish the root object, `window` in the browser, or `exports` on the server.
@@ -36,6 +36,7 @@
 	/**
 	 * Runs simple-js-mqtt-client in noConflict mode by
 	 * returning the MQTT variable to its previous owner.
+     *
 	 * @return  a reference to the MQTT object defined by this library.
 	 */
 	mqtt.noConflict = function() {
@@ -81,7 +82,7 @@
 
         // Connect
         if (isNode)
-            this.client = connectNode(this.subscriptions, this.backlog, host, clientId);
+            this.client = connectNode(this.subscriptions, host, clientId);
         else
             this.client = connectBrowser(this.subscriptions, this.backlog, host, clientId);
     };
@@ -90,7 +91,7 @@
 	//
 	// Helper function that connects the MQTT client in node
 	//
-	function connectNode (subscriptions, backlog, host, clientId) {
+	function connectNode (subscriptions, host, clientId) {
 		// Create client
 		var url = "tcp://" + host + ":1883";
 		var client = mqtt_lib.connect(url, {clientId : clientId});
@@ -174,7 +175,7 @@
 	SimpleMQTTClient.prototype.subscribe = function (channel, callback, done_callback) {
 		// Subscribe
 		if( isNode )
-			subscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
+			subscribeNode(this.client, this.subscriptions, channel, callback, done_callback);
 		else
 			subscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
 	};
@@ -183,7 +184,7 @@
 	//
 	// Helper function that subscribes to a channel in node
 	//
-	function subscribeNode (client, subscriptions, backlog, channel, callback, done_callback) {
+	function subscribeNode (client, subscriptions, channel, callback, done_callback) {
         if (subscriptions[channel]===undefined) {
             subscriptions[channel] = [callback];
             client.subscribe(channel, {qos: 0}, function() {
@@ -223,7 +224,7 @@
 	 */
 	SimpleMQTTClient.prototype.unsubscribe = function (channel, callback, done_callback) {
 		if( isNode )
-			unsubscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
+			unsubscribeNode(this.client, this.subscriptions, channel, callback, done_callback);
 		else
             unsubscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
 	};
@@ -232,7 +233,7 @@
     //
 	// Helper function that unsubscribes from a channel in node
     //
-	var unsubscribeNode = function(client, subscriptions, backlog, channel, callback, done_callback) {
+	var unsubscribeNode = function(client, subscriptions, channel, callback, done_callback) {
         if (subscriptions[channel]===undefined)
             return;
         subscriptions[channel].splice(subscriptions[channel].indexOf(callback), 1);
@@ -282,7 +283,7 @@
      */
     SimpleMQTTClient.prototype.publish = function (channel, message) {
         if (isNode)
-            publishNode(this.client, this.backlog, channel, message)
+            publishNode(this.client, channel, message)
         else
             publishBrowser(this.client, this.backlog, channel, message)
     };
@@ -291,7 +292,7 @@
 	//
 	// Helper function that publishes to a channel in node
 	//
-	var publishNode = function (client, backlog, channel, message) {
+	var publishNode = function (client, channel, message) {
         client.publish(channel, message);
 	};
 
@@ -411,7 +412,7 @@
 
 
  	// Exports mqtt object
-	// For mqtt_client.js, also with backwards-compatibility for the old `require()` API.
+	// For node.js, also with backwards-compatibility for the old `require()` API.
 	// If we're in the browser, add `MQTT` as a global object.
  	if (typeof exports !== 'undefined') {
  		if (typeof module !== 'undefined' && module.exports) {
