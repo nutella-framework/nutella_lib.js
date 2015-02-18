@@ -132,14 +132,60 @@
     var NetSubModule = function(main_nutella) {
         // Store a reference to the main module
         this.main_nutella = main_nutella;
+
+        // Store the subscriptions and the relative callbacks
+        this.subscriptions = [];
+        this.callbacks = [];
     };
 
 
-
+    /**
+     * Subscribes a channel or a filter
+     *
+     * @param channel
+     * @param callback
+     * @param done_callback
+     */
     NetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
-
+        // Prevent multiple subscriptions to the same channel
+        if (this.subscriptions.indexOf(channel)!==-1)
+            throw new Error('You can`t subscribe twice to the same channel');
+        // Pad the channel
+        var run_id = this.main_nutella.run_id;
+        var new_channel = run_id + '/' + channel;
+        // Define callbacks
+        var mqtt_cb;
+        if (isChannelWildcard(channel))
+            mqtt_cb = function(mqtt_message, mqtt_channel) {
+                // Ignore anything that is not JSON or
+                // doesn't comply to the nutella protocol
+                try {
+                    var f = extractFieldsFromMessage(mqtt_message);
+                    var clean_channel = mqtt_channel.replace(run_id+'/', '');
+                    if (f.type==='publish')
+                        callback(f.payload, clean_channel, f.componentId, f.resourceId);
+                } catch(err) {
+                    return;
+                }
+            };
+        else
+            mqtt_cb = function(mqtt_message) {
+                // Ignore anything that is not JSON or
+                // doesn't comply to the nutella protocol
+                try {
+                    var f = extractFieldsFromMessage(mqtt_message);
+                    if (f.type==='publish')
+                        callback(f.payload, f.componentId, f.resourceId);
+                } catch(err) {
+                    return;
+                }
+            };
+        // Update subscriptions, callbacks and subscribe
+        this.subscriptions.push(channel);
+        this.callbacks.push(mqtt_cb);
+        this.main_nutella.mqtt_client.subscribe(new_channel, mqtt_cb, done_callback);
     };
-    
+
 
     NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
 
@@ -159,6 +205,21 @@
     NetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
 
     };
+
+
+    //
+    // Helper function
+    // Extracts nutella parameters from a received message
+    //
+    function extractFieldsFromMessage(message) {
+        var params = JSON.parse(message);
+        var s = params.from.split('/');
+        delete params.from;
+        params.componentId = s[0];
+        if (s.length===2)
+            params.resourceId  = s[1];
+        return params;
+    }
 
 
 
@@ -285,6 +346,18 @@
             return false;
         }
         return true;
+    }
+
+
+
+    //
+    // Helper function to test if a channel is wildcard or not.
+    // Returns true if it is Returns true is.
+    // See MQTT specification for wildcard channels
+    // {http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718106 here
+    //
+    function isChannelWildcard(channel) {
+        return channel.indexOf('#')!==-1 || channel.indexOf('+')!==-1;
     }
 
 

@@ -10,7 +10,14 @@
 <script src="../../nutella_lib.js"></script>
 <script>
     var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');
-    nutella.net.subscribe("pippo");
+
+    nutella.net.subscribe("demo1", function(message, c_id, r_id) {
+        console.log('Received "' +  JSON.stringify(message) + '" from ' + c_id + '/' + r_id);
+    });
+
+    nutella.net.subscribe("demo2/#", function(message, channel, c_id, r_id) {
+        console.log('Received "' +  JSON.stringify(message) + '" on channel ' + channel + ' from ' + c_id + '/' + r_id);
+    });
 
 </script>
 </body>
