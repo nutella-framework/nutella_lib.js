@@ -208,8 +208,22 @@
     };
 
 
-    NetSubModule.prototype.publish = function(channel, message) {
 
+    /**
+     * Publishes a message to a channel
+     *
+     * @param channel
+     * @param message
+     */
+    NetSubModule.prototype.publish = function(channel, message) {
+        // Pad the channel
+        var new_channel = this.main_nutella.run_id + '/' + channel;
+        try {
+            var m = prepareMessageForPublish(message, this.main_nutella.component_id, this.main_nutella.resourceId);
+            this.main_nutella.publish(new_channel, m);
+        } catch (err) {
+            console.error(err);
+        }
     };
 
 
@@ -238,6 +252,24 @@
         return params;
     }
 
+
+
+    //
+    // Helper function
+    // Pads a message with the nutella protocol fields
+    //
+    function prepareMessageForPublish(message, componentId, resourceId) {
+        var from;
+        if (message===undefined)
+            return {type: 'publish', from: from};
+        /*
+         from = Nutella.resource_id.nil? ? Nutella.component_id : "#{Nutella.component_id}/#{Nutella.resource_id}"
+         if message.nil?
+         return {type: 'publish', from: from}.to_json
+         end
+         {type: 'publish', from: from, payload: message}.to_json
+         */
+    }
 
 
     //
