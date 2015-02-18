@@ -32,8 +32,8 @@
 //    nutella.net.publish('demo1', {a: 'proper', key: 'value'});
 
     // Handle requests
-    nutella.net.handle_requests(function(channel, component_id, resource_id) {
-
+    nutella.net.handle_requests('demo1', function(message, component_id, resource_id) {
+        return 'this is the returned value';
     });
 
     // Perform a couple requests

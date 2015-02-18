@@ -229,7 +229,30 @@
 
 
     NetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
-
+        // Pad the channel
+        var new_channel = this.main_nutella.runId + '/' + channel;
+        // Prepare callback
+        var c_id = this.main_nutella.componentId;
+        var r_id = this.main_nutella.resourceId;
+        var mqtt_cli = this.main_nutella.mqtt_client;
+        var mqtt_cb = function(mqtt_request) {
+            // Ignore anything that is not JSON or
+            // doesn't comply to the nutella protocol
+            try {
+                var f = extractFieldsFromMessage(mqtt_request);
+                var id = extractIdFromMessage(mqtt_request);
+            } catch(err) {
+                return;
+            }
+            // Only handle requests that have proper id set
+            if (f.type!=='request' || id===undefined) return;
+            // Execute callback, assemble the response and publish
+            var res_json = callback(f.payload, f.componentId, f.resourceId);
+            var mqtt_response = prepareResponse(res_json, id, c_id, r_id);
+            mqtt_cli.publish(new_channel, mqtt_response);
+        };
+        // Subscribe
+        this.main_nutella.mqtt_client.subscribe(new_channel, mqtt_cb, done_callback);
     };
 
 
@@ -252,6 +275,17 @@
 
     //
     // Helper function
+    // Extracts request id from a received message
+    //
+    function extractIdFromMessage(message) {
+        var params = JSON.parse(message);
+        return params.id;
+    }
+
+
+
+    //
+    // Helper function
     // Pads a message with the nutella protocol fields
     //
     function prepareMessageForPublish(message, componentId, resourceId) {
@@ -262,7 +296,20 @@
     }
 
 
+
     //
+    // Helper function
+    // Pads a response with the nutella protocol fields
+    //
+    function prepareResponse(message, request_id, componentId, resourceId) {
+        var from = resourceId===undefined ? componentId : (componentId + '/' + resourceId);
+        if (message===undefined)
+            return JSON.stringify({id: request_id, type: 'response', from: from});
+        return JSON.stringify({id: request_id, type: 'response', from: from, payload: message});
+    }
+
+
+
     // Helper function to test if a channel is wildcard or not.
     // Returns true if it is Returns true is.
     // See MQTT specification for wildcard channels
