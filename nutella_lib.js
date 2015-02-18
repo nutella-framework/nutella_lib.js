@@ -223,11 +223,63 @@
     };
 
 
-    NetSubModule.prototype.request = function(channel, message, callback, done_callback) {
 
+    /**
+     * Sends a request.
+     *
+     * @param channel
+     * @param message
+     * @param callback
+     * @param done_callback
+     */
+    NetSubModule.prototype.request = function(channel, message, callback, done_callback) {
+        // Handle optional message parameter
+        if (typeof message==='function') {
+            if (callback!==undefined)
+                done_callback = callback;
+            callback = message;
+            message = undefined;
+        }
+        // Pad channel
+        var new_channel = this.main_nutella.runId + '/' + channel;
+        // Prepare request
+        var request_id = Math.floor((Math.random() * 100000) + 1).toString();
+        var mqtt_request = prepareRequest(message, request_id, this.main_nutella.componentId, this.main_nutella.resourceId);
+        // Prepare callback to handle response
+        var mqtt_cb = function(mqtt_response) {
+            // Ignore anything that is not JSON or
+            // doesn't comply to the nutella protocol
+            try {
+                var f = extractFieldsFromMessage(mqtt_response);
+                var response_id = extractIdFromMessage(mqtt_response);
+                // Only handle responses that have proper id set
+                if (f.type==='response' && response_id===request_id) {
+                    // Execute callback
+                    callback(f.payload);
+                }
+            } catch(err) {
+                return;
+            }
+        };
+        // Subscribe to response
+        var mqtt_cli = this.main_nutella.mqtt_client;
+        mqtt_cli.subscribe(new_channel, mqtt_cb, function() {
+            // Once we are subscribed we publish the request
+            mqtt_cli.publish(new_channel, mqtt_request);
+            // Execute optional done callback
+            if (done_callback!==undefined) done_callback();
+        });
     };
 
 
+
+    /**
+     * Handles requests.
+     *
+     * @param channel
+     * @param callback
+     * @param done_callback
+     */
     NetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
         // Pad the channel
         var new_channel = this.main_nutella.runId + '/' + channel;
@@ -293,6 +345,19 @@
         if (message===undefined)
             return JSON.stringify({type: 'publish', from: from});
         return JSON.stringify({type: 'publish', from: from, payload: message});
+    }
+
+
+
+    //
+    // Helper function
+    // Pads a request with the nutella protocol fields
+    //
+    function prepareRequest(message, request_id, componentId, resourceId) {
+        var from = resourceId===undefined ? componentId : (componentId + '/' + resourceId);
+        if (message===undefined)
+            return JSON.stringify({id: request_id, type: 'request', from: from});
+        return JSON.stringify({id: request_id, type: 'request', from: from, payload: message});
     }
 
 
@@ -472,7 +537,7 @@
     SimpleMQTTClient.prototype.subscribe = function (channel, callback, done_callback) {
         // Subscribe
         if( isNode )
-            subscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
+            subscribeNode(this.client, this.subscriptions, channel, callback, done_callback);
         else
             subscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
     };
@@ -481,7 +546,7 @@
     //
     // Helper function that subscribes to a channel in node
     //
-    function subscribeNode (client, subscriptions, backlog, channel, callback, done_callback) {
+    function subscribeNode (client, subscriptions, channel, callback, done_callback) {
         if (subscriptions[channel]===undefined) {
             subscriptions[channel] = [callback];
             client.subscribe(channel, {qos: 0}, function() {
@@ -507,6 +572,8 @@
             }});
         } else {
             subscriptions[channel].push(callback);
+            // If there is a done_callback defined, execute it
+            if (done_callback!==undefined) done_callback();
         }
     }
 

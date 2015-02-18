@@ -37,6 +37,13 @@
     });
 
     // Perform a couple requests
+    nutella.net.request('demo1', function(response) {
+        console.log("This is the response to empty request (GET)");
+    });
+
+    nutella.net.request('demo1', 'my_request', function(response) {
+        console.log("This is the response to non-empty request");
+    });
 
 </script>
 </body>
