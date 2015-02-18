@@ -1,6 +1,6 @@
 {
   "name": "nutella_lib",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Nutella library for JavaScript",
   "main": "nutella_lib.js",
   "scripts": {
@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/nutella-framework/nutella_lib.js",
   "dependencies": {
-    "simple-js-mqtt-client": ">=0.4.0"
+    "mqtt": "~1.0.x"
   }
 }
