@@ -1,7 +1,3 @@
-//var nutella = require('../../nutella_lib.js')
-//
-//console.log(nutella.test())
-
 var mqtt = require('../../simple-js-mqtt-client');
 
 var client = mqtt.connect('ltg.evl.uic.edu');
@@ -16,8 +12,3 @@ var sscb = function(message){
     client.unsubscribe('demo1', sscb);
 };
 client.subscribe('demo1', sscb);
-
-
-// Stay alive
-console.log("Subscribed and staying alive");
-setInterval(function() {}, 5000);

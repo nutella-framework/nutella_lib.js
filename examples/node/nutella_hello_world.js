@@ -1,17 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-    <meta charset="UTF-8">
-    <title>Nutella hello world</title>
-</head>
-<body>
+var NUTELLA = require('../../nutella_lib.js')
 
-<script src="bower_components/bower-mqttws/mqttws31.js"></script>
-<script src="../../nutella_lib.js"></script>
-<script>
-
-//    // Initialize nutella
-//    var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');
+// Initialize nutella
+//var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');
 
 //    // Subscribe to a channel
 //    nutella.net.subscribe("demo1", function(message, c_id, r_id) {
@@ -33,20 +23,16 @@
 //    nutella.net.publish('demo1', 'just a string');
 //    nutella.net.publish('demo1', {a: 'proper', key: 'value'});
 
-//    // Handle requests
-//    nutella.net.handle_requests('demo1', function(message, component_id, resource_id) {
-//        return 'this is the returned value';
-//    });
-//
-//    // Perform a couple requests
-//    nutella.net.request('demo1', function(response) {
-//        console.log("This is the response to empty request (GET)");
-//    });
-//
-//    nutella.net.request('demo1', 'my_request', function(response) {
-//        console.log("This is the response to non-empty request");
-//    });
-
-</script>
-</body>
-</html>
+    // Handle requests
+    //nutella.net.handle_requests('demo1', function(message, component_id, resource_id) {
+    //    return 'this is the returned value';
+    //});
+    //
+    //// Perform a couple requests
+    //nutella.net.request('demo1', function(response) {
+    //    console.log("This is the response to empty request (GET)");
+    //});
+    //
+    //nutella.net.request('demo1', 'my_request', function(response) {
+    //    console.log("This is the response to non-empty request");
+    //});
