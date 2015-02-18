@@ -13,3 +13,15 @@ On the browser using Bower do
 bower install nutella_lib
 ```
 Make sure to include all the dependencies, see examples folder.
+
+
+# Release
+
+## Bower
+- Update `bower.json`
+- Tag version `git tag -a v0.2.0 -m 'comments`
+- Push tag `git push origin --tags`
+
+# Node
+- Update `package.json`
+- Publish `npm publish`
