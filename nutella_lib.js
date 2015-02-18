@@ -218,12 +218,8 @@
     NetSubModule.prototype.publish = function(channel, message) {
         // Pad the channel
         var new_channel = this.main_nutella.runId + '/' + channel;
-        try {
-            var m = prepareMessageForPublish(message, this.main_nutella.componentId, this.main_nutella.resourceId);
-            this.main_nutella.publish(new_channel, m);
-        } catch (err) {
-            console.error(err);
-        }
+        var m = prepareMessageForPublish(message, this.main_nutella.componentId, this.main_nutella.resourceId);
+        this.main_nutella.mqtt_client.publish(new_channel, m);
     };
 
 
@@ -259,16 +255,10 @@
     // Pads a message with the nutella protocol fields
     //
     function prepareMessageForPublish(message, componentId, resourceId) {
-        var from;
+        var from = resourceId===undefined ? componentId : (componentId + '/' + resourceId);
         if (message===undefined)
-            return {type: 'publish', from: from};
-        /*
-         from = Nutella.resource_id.nil? ? Nutella.componentId : "#{Nutella.componentId}/#{Nutella.resource_id}"
-         if message.nil?
-         return {type: 'publish', from: from}.to_json
-         end
-         {type: 'publish', from: from, payload: message}.to_json
-         */
+            return JSON.stringify({type: 'publish', from: from});
+        return JSON.stringify({type: 'publish', from: from, payload: message});
     }
 
 
