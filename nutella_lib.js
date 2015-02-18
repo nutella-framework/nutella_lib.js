@@ -40,7 +40,7 @@
      * @return  a reference to the nutella object defined by this library.
      */
     nutella.noConflict = function() {
-        root.NUTELLA = previousNutella
+        root.NUTELLA = previousNutella;
         return nutella;
     };
 
@@ -54,7 +54,7 @@
      */
     if (!isNode) {
         nutella.parseURLParameters = function () {
-            var str = location.search
+            var str = location.search;
             var queries = str.replace(/^\?/, '').split('&');
             var searchObject = {};
             for( var i = 0; i < queries.length; i++ ) {
@@ -109,7 +109,7 @@
     /**
      * Sets the resource id for this instance of nutella
      *
-     * @param {string} resourceId - the resource_id associated to this instance of nutella
+     * @param {string} resource_id - the resource_id associated to this instance of nutella
      */
     NutellaInstance.prototype.setResourceId = function(resource_id){
         this.resourceId = resource_id;
@@ -143,7 +143,7 @@
     /**
      * Subscribes to a channel or filter.
      *
-     * @param channel/filter
+     * @param channel
      * @param callback
      * @param done_callback
      */
@@ -166,7 +166,6 @@
                     if (f.type==='publish')
                         callback(f.payload, clean_channel, f.componentId, f.resourceId);
                 } catch(err) {
-                    return;
                 }
             };
         else
@@ -178,7 +177,6 @@
                     if (f.type==='publish')
                         callback(f.payload, f.componentId, f.resourceId);
                 } catch(err) {
-                    return;
                 }
             };
         // Update subscriptions, callbacks and subscribe
@@ -258,7 +256,6 @@
                     callback(f.payload);
                 }
             } catch(err) {
-                return;
             }
         };
         // Subscribe to response
@@ -444,7 +441,7 @@
 
         // Connect
         if (isNode)
-            this.client = connectNode(this.subscriptions, this.backlog, host, clientId);
+            this.client = connectNode(this.subscriptions, host, clientId);
         else
             this.client = connectBrowser(this.subscriptions, this.backlog, host, clientId);
     };
@@ -453,7 +450,7 @@
     //
     // Helper function that connects the MQTT client in node
     //
-    function connectNode (subscriptions, backlog, host, clientId) {
+    function connectNode (subscriptions, host, clientId) {
         // Create client
         var url = "tcp://" + host + ":1883";
         var client = mqtt_lib.connect(url, {clientId : clientId});
@@ -582,13 +579,13 @@
     /**
      * Unsubscribe from a channel.
      *
-     * @param {string} channel  - the channel we are unsubscribing from.
-     * @param {function} callback  - the callback we are trying to unregister
+     * @param {string} channel  - the channel we are un-subscribing from.
+     * @param {function} callback  - the callback we are trying to de-register
      * @param {callback} [done_callback] - A function that is executed once the unsubscribe operation has completed successfully.
      */
     SimpleMQTTClient.prototype.unsubscribe = function (channel, callback, done_callback) {
         if( isNode )
-            unsubscribeNode(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
+            unsubscribeNode(this.client, this.subscriptions, channel, callback, done_callback);
         else
             unsubscribeBrowser(this.client, this.subscriptions, this.backlog, channel, callback, done_callback);
     };
@@ -597,7 +594,7 @@
     //
     // Helper function that unsubscribes from a channel in node
     //
-    var unsubscribeNode = function(client, subscriptions, backlog, channel, callback, done_callback) {
+    var unsubscribeNode = function(client, subscriptions, channel, callback, done_callback) {
         if (subscriptions[channel]===undefined)
             return;
         subscriptions[channel].splice(subscriptions[channel].indexOf(callback), 1);
@@ -647,7 +644,7 @@
      */
     SimpleMQTTClient.prototype.publish = function (channel, message) {
         if (isNode)
-            publishNode(this.client, this.backlog, channel, message)
+            publishNode(this.client, channel, message);
         else
             publishBrowser(this.client, this.backlog, channel, message)
     };
@@ -656,7 +653,7 @@
     //
     // Helper function that publishes to a channel in node
     //
-    var publishNode = function (client, backlog, channel, message) {
+    var publishNode = function (client, channel, message) {
         client.publish(channel, message);
     };
 
