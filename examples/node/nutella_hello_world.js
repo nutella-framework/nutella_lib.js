@@ -1,4 +1,4 @@
-var NUTELLA = require('../../nutella_lib.js')
+var NUTELLA = require('../../OLD/nutella_lib.js')
 
 // Initialize nutella
 //var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');

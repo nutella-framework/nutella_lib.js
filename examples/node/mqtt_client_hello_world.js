@@ -1,4 +1,4 @@
-var mqtt = require('../../simple-js-mqtt-client');
+var mqtt = require('.././simple-mqtt-client');
 
 var client = mqtt.connect('ltg.evl.uic.edu');
 

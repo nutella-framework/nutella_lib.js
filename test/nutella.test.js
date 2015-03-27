@@ -1,6 +1,6 @@
 if( typeof nutella === 'undefined' ) {
 	var assert = require('chai').assert
-  var nutella = require('../nutella_lib.js');
+  var nutella = require('../OLD/nutella_lib.js');
 } else {
 	var assert = chai.assert;
 }

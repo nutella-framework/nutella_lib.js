@@ -7,7 +7,7 @@
 <body>
 
 <script src="bower_components/bower-mqttws/mqttws31.js"></script>
-<script src="../../simple-js-mqtt-client.js"></script>
+<script src="../../node_modules/simple-mqtt-client/simple-mqtt-client.js"></script>
 <script>
     var client = MQTT.connect('ltg.evl.uic.edu');
     client.subscribe('demo1', function(message){

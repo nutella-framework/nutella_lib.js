@@ -1,5 +1,11 @@
-.DS_Store
-node_modules/
-bower_components/
+# npm modules (except simple-mqtt-client)
+node_modules/*
+!node_modules/simple-mqtt-client
 
+dist/
+
+# Mac
+.DS_Store
+
+# WebStorm
 .idea/
