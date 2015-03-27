@@ -1,7 +1,20 @@
-var NUTELLA = require('../../src/nutella_lib')
+var NUTELLA = require('../src/nutella_lib')
 
 // Initialize nutella
-//var nutella = NUTELLA.init('my_run_id', 'ltg.evl.uic.edu', 'demo_browser_interface');
+//var p = NUTELLA.parseURLParameters();    // This only works in the browser
+var p = NUTELLA.parseArgs();
+console.log(p)
+var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_node_bot');
+nutella.setResourceId('r_id');
+nutella.log.test();
+nutella.net.publish('channel', 'message');
+nutella.persist.test();      // this should only work in node
+nutella = NUTELLA.initApp('ltg.evl.uic.edu', 'my_app_id', 'demo_node_bot');
+nutella.app.net.test();
+nutella.app.log.test();
+nutella.app.persist.test();
+
+
 
 //    // Subscribe to a channel
 //    nutella.net.subscribe("demo1", function(message, c_id, r_id) {

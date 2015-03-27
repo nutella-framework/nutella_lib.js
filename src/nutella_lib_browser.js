@@ -5,10 +5,10 @@
 "use strict";
 
 /**
- * Entry point for nutella_lib in node
+ * Entry point for nutella_lib in the browser
  */
 
-var nutella_i = require('./nutella_i');
+var nutella_i = require('./nutella_i_browser');
 
 // Internal reference to this library (used below)
 var nutella = {};
@@ -50,21 +50,20 @@ nutella.initApp = function(broker_hostname, app_id, component_id) {
 
 
 /**
- * Utility method that parses CLI parameters.
- * It is obviously only available in node.
+ * Utility method that parses URL parameters from the URL.
+ * It is obviously only available in the browser.
  *
- * @return {Object} An object containing all the CLI parameters: broker, app_id, run_id
+ * @return {Object} An object containing all the URL query parameters
  */
-nutella.parseArgs = function() {
-    if (process.argv.length<5) {
-        console.warn("Couldn't read broker address, app_id and run_id from the command line, you might have troubles initializing nutella")
-        return;
+nutella.parseURLParameters = function () {
+    var str = location.search;
+    var queries = str.replace(/^\?/, '').split('&');
+    var searchObject = {};
+    for( var i = 0; i < queries.length; i++ ) {
+        var split = queries[i].split('=');
+        searchObject[split[0]] = split[1];
     }
-    var t = {};
-    t.broker = process.argv[2];
-    t.app_id = process.argv[3];
-    t.run_id = process.argv[4];
-    return t;
+    return searchObject;
 };
 
 

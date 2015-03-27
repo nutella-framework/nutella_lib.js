@@ -5,7 +5,7 @@ var watchify = require('watchify');
 var source = require('vinyl-source-stream');
 
 // bundler used to run watchify and browserify
-var bundler = watchify(browserify(watchify.args));
+var bundler = watchify(browserify(watchify.args, {standalone: 'NUTELLA'}));
 // add the lib file to bundle
 bundler.add('./src/nutella_lib.js');
 
