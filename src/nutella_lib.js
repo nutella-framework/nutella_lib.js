@@ -1,8 +1,9 @@
 /******************
  * nutella_lib.js *
  ******************/
-var unique = require('uniq');
+var mqtt = require('simple-mqtt-client');
 
-var pippo = [1, 2, 2, 3, 4, 5, 5, 5, 6];
+var c1 = mqtt.connect('ltg.evl.uic.edu');
+c1.publish('test_channel', 'message!!!');
 
-console.log(unique(pippo));
+console.log('Hello civilized module');
