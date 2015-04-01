@@ -68,5 +68,24 @@ nutella.parseArgs = function() {
 };
 
 
+/**
+ * Utility method that parses CLI parameters for
+ * application level components.
+ * It is obviously only available in node.
+ *
+ * @return {Object} An object containing all the CLI parameters: broker, app_id, run_id
+ */
+nutella.parseAppComponentArgs = function() {
+    if (process.argv.length<4) {
+        console.warn("Couldn't read broker address and app_id from the command line, you might have troubles initializing nutella")
+        return;
+    }
+    var t = {};
+    t.broker = process.argv[2];
+    t.app_id = process.argv[3];
+    return t;
+};
+
+
 // Exports nutella object
 module.exports = nutella;

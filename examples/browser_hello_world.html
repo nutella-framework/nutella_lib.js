@@ -10,16 +10,13 @@
 
 <script>
     // Initialize nutella
-    var p = NUTELLA.parseURLParameters();    // This only works in the browser
-    console.debug(p)
     var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_node_bot');
     nutella.setResourceId('r_id');
-    nutella.log.test();
-    nutella.net.publish('channel', 'message');
-    // nutella.persist.test();      // this should only work in node
-    nutella = NUTELLA.initApp('ltg.evl.uic.edu', 'my_app_id', 'demo_node_bot');
-    nutella.app.net.test();
-    nutella.app.log.test();
+    nutella.net.subscribe('channel', function(message, from) {
+        console.log('Received: ' + message + ' from: ' + from.toString());
+    });
+
+
 
 
     // Initialize nutella

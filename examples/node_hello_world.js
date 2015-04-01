@@ -2,7 +2,7 @@ var NUTELLA = require('../src/nutella_lib')
 
 // Initialize nutella
 //var p = NUTELLA.parseURLParameters();    // This only works in the browser
-var p = NUTELLA.parseArgs();
+var p = NUTELLA.parseAppComponentArgs();
 console.log(p)
 var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_node_bot');
 nutella.setResourceId('r_id');
