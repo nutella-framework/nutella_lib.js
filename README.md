@@ -3,25 +3,25 @@
 # nutella library for node.js and the browser
 
 ## Installation
-On node.js do
+For node.js projects do
 ```
 npm install nutella_lib
 ```
 
-On the browser using Bower do
-```
-bower install nutella_lib
-```
-Make sure to include all the dependencies, see examples folder.
+For browser projects either:
+
+1. `npm install nutella_lib` and then use [browserify](http://browserify.org/) OR
+2. use the bundled `nutella_lib.js` in `dist`
 
 
-# Release
+## Building the project
+For developers working on the library. We are using gulp + browserify + watchify to continuously and incrementally build the library as we develop. 
 
-## Bower
-- Update `bower.json`
-- Tag version `git tag -a v0.2.0 -m 'comments`
-- Push tag `git push origin --tags`
+**To contribute**: Clone the repo and `gulp bundle` inside the project directory. Every time you make a change to any of the files required by the library gulp will rebuild it. 
 
-# Node
-- Update `package.json`
-- Publish `npm publish`
+
+## Releasing a new version
+For developers working on the library, to release a new version:
+
+- Update the version in the `package.json`
+- Publish to npm by doing `npm publish`
