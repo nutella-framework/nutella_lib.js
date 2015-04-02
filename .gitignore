@@ -2,8 +2,6 @@
 node_modules/*
 !node_modules/simple-mqtt-client
 
-dist/
-
 # Mac
 .DS_Store
 

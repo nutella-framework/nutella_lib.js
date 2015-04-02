@@ -64,7 +64,7 @@ net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
             try {
                 var f = extract_fields_from_message(mqtt_message);
                 if(f.type==='publish')
-                    callback.call(f.payload, f.from);
+                    callback(f.payload, f.from);
             } catch(e) {
                 if (e instanceof SyntaxError) {
                     // Message is not JSON, drop it
@@ -152,15 +152,17 @@ net.request_to = function( channel, message, callback, appId, runId ) {
     //Prepare callback
     var mqtt_cb = function(mqtt_message) {
         var f = extract_fields_from_message(mqtt_message);
-        if (f.id===m.id && m.type==='response') {
+        if (f.id===m.id && f.type==='response') {
             callback(f.payload);
             net.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb);
         }
     };
     // Subscribe
-    net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb);
-    // Publish message
-    net.nutella.mqtt_client.publish( padded_channel, m.message );
+    net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, function() {
+        // Publish message
+        net.nutella.mqtt_client.publish( padded_channel, m.message );
+    });
+
 };
 
 
@@ -188,7 +190,6 @@ net.handle_requests_on = function( channel, callback, appId, runId, done_callbac
     var mqtt_cb = function(request) {
         try {
             // Extract nutella fields
-            //type, from, payload, id =
             var f = extract_fields_from_message(request);
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
@@ -234,8 +235,8 @@ function un_pad_channel(channel, app_id, run_id) {
     if (app_id===undefined && run_id===undefined)
         return channel.replace('/nutella/', '');
     if (app_id!==undefined && run_id===undefined)
-        return channel.replace("/nutella/apps/#{app_id}/", '');
-    return channel.replace("/nutella/apps/#{app_id}/runs/#{run_id}/", '');
+        return channel.replace("/nutella/apps/" + app_id + "/", '');
+    return channel.replace("/nutella/apps/" + app_id + "/runs/" + run_id + "/", '');
 }
 
 

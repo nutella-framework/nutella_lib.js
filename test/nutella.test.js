@@ -1,14 +1,16 @@
-if( typeof nutella === 'undefined' ) {
-	var assert = require('chai').assert
-  var nutella = require('../OLD/nutella_lib.js');
+if( typeof NUTELLA === 'undefined' ) {
+  var NUTELLA = require('../src/nutella_lib');
+  var assert = require('chai').assert;
 } else {
-	var assert = chai.assert;
+  var assert = chai.assert;
 }
 
+
+
 describe('Nutella', function(){
-  describe('#test()', function(){
-    it('should return "test" when called', function(){
-      assert.equal("test", nutella.test());
+  describe('NUTELLA', function(){
+    it('should return defined when called', function(){
+      assert.notEqual(undefined, NUTELLA, 'NUTELLA is undefined!');
     })
   })
 })
