@@ -24,8 +24,8 @@ var AbstractNet = function(main_nutella) {
  *
  * @param {string} channel - the channel or filter we are subscribing to. Can contain wildcard(s)
  * @param {subscribeCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, done_callback) {
@@ -80,8 +80,8 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
  * Unsubscribes from a channel or a set of channels
  *
  * @param {string} channel - we want to unsubscribe from. Can contain wildcard(s)
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_callback ) {
@@ -104,8 +104,8 @@ AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_ca
  *
  * @param {String} channel - the channel we want to publish the message to. *CANNOT* contain wildcard(s)!
  * @param {Object} message - the message we are publishing. This can be any JS variable, even undefined.
- * @param {String} appId - used to pad the channels
- * @param {String} runId - used to pad the channels
+ * @param {String|undefined} appId - used to pad the channels
+ * @param {String|undefined} runId - used to pad the channels
  */
 AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     // Pad channel
@@ -134,8 +134,8 @@ AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
  * @param {string} channel - the channel we want to make the request to. *CANNOT* contain wildcard(s)!
  * @param {string} message - the body of the request. This can be any JS variable, even undefined.
  * @param {requestCallback} callback - the callback that is fired whenever a response is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  */
 AbstractNet.prototype.request_to = function( channel, message, callback, appId, runId ) {
     // Pad channel
@@ -173,8 +173,8 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
  *
  * @param {string} channel - the channel we want to listen for requests on. Can contain wildcard(s).
  * @param {handleCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever we are ready to handle requests
  */
 AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, runId, done_callback) {

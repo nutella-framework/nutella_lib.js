@@ -2774,7 +2774,6 @@ FRNetSubModule.prototype.subscribe = function(channel, callback, done_callback) 
 };
 
 
-
 /**
  * Unsubscribes from a channel
  *
@@ -2786,7 +2785,6 @@ FRNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
 };
 
 
-
 /**
  * Publishes a message to a channel
  *
@@ -2796,7 +2794,6 @@ FRNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
 FRNetSubModule.prototype.publish = function(channel, message) {
     this.net.publish_to(channel, message, undefined, undefined);
 };
-
 
 
 /**
@@ -2811,7 +2808,6 @@ FRNetSubModule.prototype.request = function(channel, message, callback) {
 };
 
 
-
 /**
  * Handles requests.
  *
@@ -2821,6 +2817,219 @@ FRNetSubModule.prototype.request = function(channel, message, callback) {
  */
 FRNetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
     this.net.handle_requests_on(channel, callback, undefined, undefined, done_callback);
+};
+
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Framework-level APIs to communicate at the run-level
+//----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Allows framework-level APIs to subscribe to a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param run_id
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.subscribe_to_run = function(app_id, run_id, channel, callback,done_callback) {
+    this.net.subscribe_to(channel,callback,app_id,run_id,done_callback)
+};
+
+
+/**
+ * Allows framework-level APIs to unsubscribe from a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param run_id
+ * @param channel
+ * @param done_callback
+ */
+FRNetSubModule.prototype.unsubscribe_to_run = function( app_id, run_id, channel, done_callback ) {
+    this.net.unsubscribe_from(channel, app_id, run_id, done_callback);
+};
+
+
+/**
+ * Allows framework-level APIs to publish to a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param run_id
+ * @param channel
+ * @param message
+ */
+FRNetSubModule.prototype.publish_to_run = function( app_id, run_id, channel, message ) {
+    this.net.publish_to(channel, message, app_id, run_id);
+};
+
+
+/**
+ * Allows framework-level APIs to make an asynchronous request to a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param run_id
+ * @param channel
+ * @param request
+ * @param callback
+ */
+FRNetSubModule.prototype.request_to_run = function( app_id, run_id, channel, request, callback) {
+    this.net.request_to(channel, request, callback, app_id, run_id);
+};
+
+
+/**
+ * Allows framework-level APIs to handle requests on a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param run_id
+ * @param channel
+ * @param callback
+ */
+FRNetSubModule.prototype.handle_requests_on_run = function( app_id, run_id, channel, callback, done_callback) {
+    this.net.handle_requests_on(channel, callback, app_id, run_id, done_callback)
+};
+
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Framework-level APIs to communicate at the run-level (broadcast)
+//----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Allows framework-level APIs to subscribe to a run-level channel *for ALL runs*
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.subscribe_to_all_runs = function( channel, callback, done_callback ) {
+    // TODO
+};
+
+
+/**
+ * Allows framework-level APIs to unsubscribe from a run-level channel *for ALL runs*
+ *
+ * @param channel
+ */
+FRNetSubModule.prototype.unsubscribe_from_all_runs = function(channel, done_callback) {
+    this.net.unsubscribe_from(channel, '+', '+', done_callback);
+};
+
+
+/**
+ * Allows framework-level APIs to publish a message to a run-level channel *for ALL runs*
+ *
+ * @param channel
+ * @param message
+ */
+FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
+    // TODO need runslist!!!!
+};
+
+
+/**
+ * Allows framework-level APIs to send a request to a run-level channel *for ALL runs*
+ *
+ * @param channel
+ * @param request
+ * @param callback
+ */
+FRNetSubModule.prototype.request_to_all_runs = function(channel, request, callback) {
+    // TODO need runlist!
+};
+
+
+/**
+ * Allows framework-level APIs to handle requests to a run-level channel *for ALL runs*
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.handle_requests_on_all_runs = function(channel, callback, done_callback) {
+    // TODO
+};
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Framework-level APIs to communicate at the application-level
+//----------------------------------------------------------------------------------------------------------------
+
+/**
+ * Allows framework-level APIs to subscribe to an app-level channel
+ *
+ * @param app_id
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.subscribe_to_app = function(app_id, channel, callback, done_callback) {
+    this.net.subscribe_to(channel,callback,app_id, undefined, done_callback)
+};
+
+
+/**
+ * Allows framework-level APIs to unsubscribe from an app-level channel within a specific run
+ *
+ * @param app_id
+ * @param channel
+ * @param done_callback
+ */
+FRNetSubModule.prototype.unsubscribe_to_app = function( app_id, channel, done_callback) {
+    this.net.unsubscribe_from(channel,app_id,undefined, done_callback);
+};
+
+
+/**
+ * Allows framework-level APIs to publish to an app-level channel
+ *
+ * @param app_id
+ * @param channel
+ * @param message
+ */
+FRNetSubModule.prototype.publish_to_app = function(app_id, channel, message) {
+    this.net.publish_to(channel,message,app_id,undefined);
+};
+
+
+/**
+ * Allows framework-level APIs to make an asynchronous request to a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param channel
+ * @param request
+ * @param callback
+ */
+FRNetSubModule.prototype.request_to_app = function( app_id, channel, request, callback) {
+  this.net.request_to(channel, request, callback, app_id, undefined);
+};
+
+
+/**
+ * Allows framework-level APIs to handle requests on a run-level channel within a specific run
+ *
+ * @param app_id
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.handle_requests_on_app = function(app_id, channel, callback, done_callback) {
+    this.net.handle_requests_on(channel, callback, app_id, undefined, done_callback);
+};
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Framework-level APIs to communicate at the application-level (broadcast)
+//----------------------------------------------------------------------------------------------------------------
+
+
+FRNetSubModule.prototype.subscribe_to_all_apps = function(channel, callback, done_callback) {
+
 };
 
 
@@ -3091,8 +3300,8 @@ var AbstractNet = function(main_nutella) {
  *
  * @param {string} channel - the channel or filter we are subscribing to. Can contain wildcard(s)
  * @param {subscribeCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, done_callback) {
@@ -3147,8 +3356,8 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
  * Unsubscribes from a channel or a set of channels
  *
  * @param {string} channel - we want to unsubscribe from. Can contain wildcard(s)
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_callback ) {
@@ -3171,8 +3380,8 @@ AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_ca
  *
  * @param {String} channel - the channel we want to publish the message to. *CANNOT* contain wildcard(s)!
  * @param {Object} message - the message we are publishing. This can be any JS variable, even undefined.
- * @param {String} appId - used to pad the channels
- * @param {String} runId - used to pad the channels
+ * @param {String|undefined} appId - used to pad the channels
+ * @param {String|undefined} runId - used to pad the channels
  */
 AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     // Pad channel
@@ -3201,8 +3410,8 @@ AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
  * @param {string} channel - the channel we want to make the request to. *CANNOT* contain wildcard(s)!
  * @param {string} message - the body of the request. This can be any JS variable, even undefined.
  * @param {requestCallback} callback - the callback that is fired whenever a response is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  */
 AbstractNet.prototype.request_to = function( channel, message, callback, appId, runId ) {
     // Pad channel
@@ -3240,8 +3449,8 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
  *
  * @param {string} channel - the channel we want to listen for requests on. Can contain wildcard(s).
  * @param {handleCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever we are ready to handle requests
  */
 AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, runId, done_callback) {
