@@ -2,18 +2,11 @@
  * Network APIs abstraction
  */
 
-var net = {};
 
-// Store the subscriptions and the relative callbacks
-net.subscriptions = [];
-net.callbacks = [];
-
-
-/**
- * Constructor
- */
-net.AbstractNet = function(runNutellaInstance) {
-    net.nutella = runNutellaInstance;
+var AbstractNet = function(main_nutella) {
+    this.subscriptions = [];
+    this.callbacks = [];
+    this.nutella = main_nutella;
 };
 
 
@@ -31,20 +24,20 @@ net.AbstractNet = function(runNutellaInstance) {
  *
  * @param {string} channel - the channel or filter we are subscribing to. Can contain wildcard(s)
  * @param {subscribeCallback} callback - fired whenever a message is received
- * @param {string|undefined} appId - used to pad channels
- * @param {string|undefined} runId - used to pad channels
+ * @param {string} appId - used to pad channels
+ * @param {string} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
-net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
+AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, done_callback) {
     // Pad channel
     var padded_channel = pad_channel(channel, appId, runId);
     // Maintain unique subscriptions
-    if(net.subscriptions.indexOf(padded_channel)>-1)
+    if(this.subscriptions.indexOf(padded_channel)>-1)
         throw 'You can`t subscribe twice to the same channel`';
     // Depending on what type of channel we are subscribing to (wildcard or simple)
     // register a different kind of callback
     var mqtt_cb;
-    if(net.nutella.mqtt_client.isChannelWildcard(padded_channel))
+    if(this.nutella.mqtt_client.isChannelWildcard(padded_channel))
         mqtt_cb = function(mqtt_message, mqtt_channel) {
             try {
                 var f = extract_fields_from_message(mqtt_message);
@@ -75,11 +68,11 @@ net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
             }
         };
     // Add to subscriptions, save mqtt callback and subscribe
-    net.subscriptions.push(padded_channel);
-    net.callbacks.push(mqtt_cb);
-    net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
+    this.subscriptions.push(padded_channel);
+    this.callbacks.push(mqtt_cb);
+    this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
     // Notify subscriptions bot
-    net.publish_to('subscriptions', {channel:  padded_channel}, appId, runId);
+    this.publish_to('subscriptions', {channel:  padded_channel}, appId, runId);
 };
 
 
@@ -87,22 +80,22 @@ net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
  * Unsubscribes from a channel or a set of channels
  *
  * @param {string} channel - we want to unsubscribe from. Can contain wildcard(s)
- * @param {string|undefined} appId - used to pad channels
- * @param {string|undefined} runId - used to pad channels
+ * @param {string} appId - used to pad channels
+ * @param {string} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
-net.unsubscribe_from = function(channel, appId, runId, done_callback ) {
+AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_callback ) {
     // Pad channel
     var padded_channel = pad_channel(channel, appId, run_id);
-    var idx = net.subscriptions.indexOf(padded_channel);
+    var idx = this.subscriptions.indexOf(padded_channel);
     // If we are not subscribed to this channel, return (no error is given)
     if(idx===-1) return;
     // Fetch the mqtt_callback associated with this channel/subscription
-    var mqtt_cb = net.callbacks[idx];
+    var mqtt_cb = this.callbacks[idx];
     // Remove from subscriptions, callbacks and unsubscribe
-    net.subscriptions.splice(idx, 1);
-    net.callbacks.splice(idx, 1);
-    net.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb, done_callback);
+    this.subscriptions.splice(idx, 1);
+    this.callbacks.splice(idx, 1);
+    this.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb, done_callback);
 };
 
 
@@ -111,16 +104,16 @@ net.unsubscribe_from = function(channel, appId, runId, done_callback ) {
  *
  * @param {String} channel - the channel we want to publish the message to. *CANNOT* contain wildcard(s)!
  * @param {Object} message - the message we are publishing. This can be any JS variable, even undefined.
- * @param {String|undefined} appId - used to pad the channels
- * @param {String|undefined} runId - used to pad the channels
+ * @param {String} appId - used to pad the channels
+ * @param {String} runId - used to pad the channels
  */
-net.publish_to = function(channel, message, appId, runId) {
+AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     // Pad channel
     var padded_channel = pad_channel(channel, appId, runId);
     // Throw exception if trying to publish something that is not JSON
     try {
-        var m = prepare_message_for_publish(message);
-        net.nutella.mqtt_client.publish(padded_channel, m);
+        var m = prepare_message_for_publish(message, this.nutella);
+        this.nutella.mqtt_client.publish(padded_channel, m);
     } catch(e) {
         console.error('Error: you are trying to publish something that is not JSON');
         console.error(e.message);
@@ -141,26 +134,26 @@ net.publish_to = function(channel, message, appId, runId) {
  * @param {string} channel - the channel we want to make the request to. *CANNOT* contain wildcard(s)!
  * @param {string} message - the body of the request. This can be any JS variable, even undefined.
  * @param {requestCallback} callback - the callback that is fired whenever a response is received
- * @param {string|undefined} appId - used to pad channels
- * @param {string|undefined} runId - used to pad channels
+ * @param {string} appId - used to pad channels
+ * @param {string} runId - used to pad channels
  */
-net.request_to = function( channel, message, callback, appId, runId ) {
+AbstractNet.prototype.request_to = function( channel, message, callback, appId, runId ) {
     // Pad channel
     var padded_channel = pad_channel(channel, appId, runId);
     // Prepare message
-    var m = prepare_message_for_request(message);
+    var m = prepare_message_for_request(message, this.nutella);
     //Prepare callback
     var mqtt_cb = function(mqtt_message) {
         var f = extract_fields_from_message(mqtt_message);
         if (f.id===m.id && f.type==='response') {
             callback(f.payload);
-            net.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb);
+            this.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb);
         }
     };
     // Subscribe
-    net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, function() {
+    this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, function() {
         // Publish message
-        net.nutella.mqtt_client.publish( padded_channel, m.message );
+        this.nutella.mqtt_client.publish( padded_channel, m.message );
     });
 
 };
@@ -180,11 +173,11 @@ net.request_to = function( channel, message, callback, appId, runId ) {
  *
  * @param {string} channel - the channel we want to listen for requests on. Can contain wildcard(s).
  * @param {handleCallback} callback - fired whenever a message is received
- * @param {string|undefined} appId - used to pad channels
- * @param {string|undefined} runId - used to pad channels
+ * @param {string} appId - used to pad channels
+ * @param {string} runId - used to pad channels
  * @param {function} done_callback - fired whenever we are ready to handle requests
  */
-net.handle_requests_on = function( channel, callback, appId, runId, done_callback) {
+AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, runId, done_callback) {
     // Pad channel
     var padded_channel = pad_channel(channel, appId, runId);
     var mqtt_cb = function(request) {
@@ -194,8 +187,8 @@ net.handle_requests_on = function( channel, callback, appId, runId, done_callbac
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
             // Execute callback and send response
-            var m = prepare_message_for_response(callback(f.payload, f.from), f.id);
-            net.nutella.mqtt_client.publish( padded_channel, m );
+            var m = prepare_message_for_response(callback(f.payload, f.from), f.id, this.nutella);
+            this.nutella.mqtt_client.publish( padded_channel, m );
         } catch(e) {
             if (e instanceof SyntaxError) {
                 // Message is not JSON, drop it
@@ -206,7 +199,7 @@ net.handle_requests_on = function( channel, callback, appId, runId, done_callbac
         }
     };
     // Subscribe to the channel
-    net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback)
+    this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback)
 };
 
 
@@ -240,52 +233,52 @@ function un_pad_channel(channel, app_id, run_id) {
 }
 
 
-function assemble_from() {
+function assemble_from(n) {
     var from = {};
-    if(net.nutella.runId===undefined) {
-        if(net.nutella.appId===undefined) {
+    if(n.run_id===undefined) {
+        if(n.appId===undefined) {
             from.type = 'framework';
         } else {
             from.type = 'app';
-            from.app_id = net.nutella.appId;
+            from.app_id = n.appId;
         }
     } else {
         from.type = 'run';
-        from.run_id = net.nutella.runId;
+        from.run_id = n.runId;
     }
-    from.component_id = net.nutella.componentId;
-    if (net.nutella.resourceId!==undefined)
-        from.resource_id = net.nutella.resourceId;
+    from.component_id = n.componentId;
+    if (n.resourceId!==undefined)
+        from.resource_id = n.resourceId;
     return from;
 }
 
 
-function prepare_message_for_publish(message) {
+function prepare_message_for_publish(message, n) {
     if(message===undefined)
-        return JSON.stringify({type: 'publish', from: assemble_from()});
-    return JSON.stringify({type: 'publish', from: assemble_from(), payload: message});
+        return JSON.stringify({type: 'publish', from: assemble_from(n)});
+    return JSON.stringify({type: 'publish', from: assemble_from(n), payload: message});
 }
 
 
-function prepare_message_for_request(message) {
+function prepare_message_for_request(message, n) {
     var id = Math.floor((Math.random() * 100000) + 1).toString();
     var m = {};
     m.id = id;
     if(message===undefined)
-        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from()});
+        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from(n)});
     else
-        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from(), payload: message});
+        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from(n), payload: message});
     return m;
 }
 
 
-function prepare_message_for_response(message, id) {
+function prepare_message_for_response(message, id, n) {
     if(message===undefined)
-        return JSON.stringify({id: id, type: 'response', from: assemble_from()});
-    return JSON.stringify({id: id, type: 'response', from: assemble_from(), payload: message});
+        return JSON.stringify({id: id, type: 'response', from: assemble_from(n)});
+    return JSON.stringify({id: id, type: 'response', from: assemble_from(n), payload: message});
 }
 
 
 
 // Export module
-module.exports = net;
+module.exports = AbstractNet;

@@ -6,6 +6,7 @@ var SimpleMQTTClient = require('simple-mqtt-client');
 
 // Require various sub-modules
 var AppSubModule = require('./app_core_browser');
+var FrSubModule = require('./fr_core_browser');
 var NetSubModule = require('./run_net');
 var LogSubModule = require('./run_log');
 
@@ -39,7 +40,6 @@ RunNutellaInstance.prototype.setResourceId = function(resource_id){
 };
 
 
-
 /**
  * Defines the AppNutellaInstance class.
  *
@@ -66,7 +66,33 @@ AppNutellaInstance.prototype.setResourceId = function(resource_id){
 };
 
 
+/**
+ * Defines the FRNutellaInstance class.
+ *
+ * @param {string} broker_hostname - the hostname of the broker.
+ * @param {string} component_id - the name of this component
+ */
+var FrNutellaInstance = function (broker_hostname, component_id) {
+    //Initialize parameters
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname);
+    this.componentId = component_id;
+    // Initialized the various sub-modules
+    this.f = new FrSubModule(this);
+};
+
+/**
+ * Sets the resource id for this instance of nutella
+ *
+ * @param {string} resource_id - the resource_id associated to this instance of nutella
+ */
+AppNutellaInstance.prototype.setResourceId = function(resource_id){
+    this.resourceId = resource_id;
+};
+
+
+
 module.exports = {
     RunNutellaInstance : RunNutellaInstance,
-    AppNutellaInstance : AppNutellaInstance
+    AppNutellaInstance : AppNutellaInstance,
+    FrNutellaInstance : FrNutellaInstance
 };
