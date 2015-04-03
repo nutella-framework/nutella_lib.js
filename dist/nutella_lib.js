@@ -127,17 +127,17 @@ function connectBrowser (subscriptions, backlog, host, clientId) {
     };
     // Register callback for received message
     client.onMessageArrived = function (message) {
-        // Executes the appropriate channel callback
+        // Execute all the appropriate callbacks:
+        // the ones specific to this channel with a single parameter (message)
+        // the ones associated to a wildcard channel, with two parameters (message and channel)
         var cbs = findCallbacks(subscriptions, message.destinationName);
         if (cbs!==undefined) {
-            if (Object.keys(subscriptions).indexOf(message.destinationName)!==-1)
-                cbs.forEach(function(cb) {
+            cbs.forEach(function(cb) {
+                if (Object.keys(subscriptions).indexOf(message.destinationName)!==-1)
                     cb(message.payloadString);
-                });
-            else
-                cbs.forEach(function(cb) {
+                else
                     cb(message.payloadString, message.destinationName);
-                });
+            });
         }
     };
     // Connect
@@ -265,11 +265,6 @@ SimpleMQTTClient.prototype.isChannelWildcard = function(channel) {
 
 
 
-//
-// Exports SimpleMQTTClient class for other modules
-//
-module.exports = SimpleMQTTClient;
-
 
 
 
@@ -350,6 +345,12 @@ function addToBacklog (client, backlog, method, parameters) {
 };
 
 
+
+
+//
+// Exports SimpleMQTTClient class for other modules
+//
+module.exports = SimpleMQTTClient;
 
 },{"./paho/mqttws31":3}],3:[function(require,module,exports){
 /*******************************************************************************
@@ -2519,46 +2520,141 @@ module.exports = AppSubModule;
  * App-level log APIs for nutella
  */
 
-
+var AppNetSubModule = require('./app_net');
 
 var AppLogSubModule = function(main_nutella) {
-    // Store a reference to the main module
-    this.main_nutella = main_nutella;
+    this.net = new AppNetSubModule(main_nutella);
 };
 
 
 
-AppLogSubModule.prototype.test = function () {
-    console.log("This is just a test method for the APP log sub-module");
+AppLogSubModule.prototype.debug = function(message, code) {
+    console.debug(message);
+    this.net.publish('logging', logToJson(message, code, 'debug'));
+    return code;
 };
+
+AppLogSubModule.prototype.info = function(message, code) {
+    console.info(message);
+    this.net.publish('logging', logToJson(message, code, 'info'));
+    return code;
+};
+
+AppLogSubModule.prototype.success = function(message, code) {
+    console.log('%c '+ message , 'color: #009933');
+    this.net.publish('logging', logToJson(message, code, 'success'));
+    return code;
+};
+
+AppLogSubModule.prototype.warn = function(message, code) {
+    console.warn(message);
+    this.net.publish('logging', logToJson(message, code, 'warn'));
+    return code;
+};
+
+AppLogSubModule.prototype.error = function(message, code) {
+    console.error(message);
+    this.net.publish('logging', logToJson(message, code, 'error'));
+    return code;
+};
+
+
+function logToJson( message, code, level) {
+    return (code === undefined) ? {level: level, message: message} : {level: level, message: message, code: code};
+}
 
 
 
 module.exports = AppLogSubModule;
 
-},{}],6:[function(require,module,exports){
+},{"./app_net":6}],6:[function(require,module,exports){
 /**
  * App-level Networking APIs for nutella
  */
 
 
+var net = require('./util/net');
 
+
+/**
+ * App-level network APIs for nutella
+ * @param main_nutella
+ * @constructor
+ */
 var AppNetSubModule = function(main_nutella) {
     // Store a reference to the main module
-    this.main_nutella = main_nutella;
+    this.nutella = main_nutella;
+    this.net = net.AbstractNet(main_nutella);
 };
 
 
 
-AppNetSubModule.prototype.test = function () {
-    console.log("This is just a test method for the APP net sub-module");
+/**
+ * Subscribes to a channel or filter.
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+AppNetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
+    net.subscribe_to(channel, callback, this.nutella.appId, undefined, done_callback);
+};
+
+
+
+/**
+ * Unsubscribes from a channel
+ *
+ * @param channel
+ * @param done_callback
+ */
+AppNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
+    net.unsubscribe_from(channel, this.nutella.appId, undefined, done_callback);
+};
+
+
+
+/**
+ * Publishes a message to a channel
+ *
+ * @param channel
+ * @param message
+ */
+AppNetSubModule.prototype.publish = function(channel, message) {
+    net.publish_to(channel, message, this.nutella.appId, undefined);
+};
+
+
+
+/**
+ * Sends a request.
+ *
+ * @param channel
+ * @param message
+ * @param callback
+ */
+AppNetSubModule.prototype.request = function(channel, message, callback) {
+    net.request_to(channel, message, callback, this.nutella.appId, undefined);
+};
+
+
+
+/**
+ * Handles requests.
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+AppNetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
+    net.handle_requests_on(channel, callback, this.nutella.appId, undefined, done_callback);
 };
 
 
 
 module.exports = AppNetSubModule;
 
-},{}],7:[function(require,module,exports){
+},{"./util/net":10}],7:[function(require,module,exports){
 /**
  * Run-level and App-level Nutella instances for the browser
  */
@@ -2636,21 +2732,54 @@ module.exports = {
  * Run-level Logging APIs for nutella
  */
 
+var NetSubModule = require('./run_net');
+
 var LogSubModule = function(main_nutella) {
-    // Store a reference to the main module
-    this.main_nutella = main_nutella;
+    this.net = new NetSubModule(main_nutella);
 };
 
 
-LogSubModule.prototype.test = function () {
-    console.log("This is just a test method for the app sub-module");
+LogSubModule.prototype.debug = function(message, code) {
+    console.debug(message);
+    this.net.publish('logging', logToJson(message, code, 'debug'));
+    return code;
 };
+
+LogSubModule.prototype.info = function(message, code) {
+    console.info(message);
+    this.net.publish('logging', logToJson(message, code, 'info'));
+    return code;
+};
+
+LogSubModule.prototype.success = function(message, code) {
+    console.log('%c '+ message , 'color: #009933');
+    this.net.publish('logging', logToJson(message, code, 'success'));
+    return code;
+};
+
+LogSubModule.prototype.warn = function(message, code) {
+    console.warn(message);
+    this.net.publish('logging', logToJson(message, code, 'warn'));
+    return code;
+};
+
+LogSubModule.prototype.error = function(message, code) {
+    console.error(message);
+    this.net.publish('logging', logToJson(message, code, 'error'));
+    return code;
+};
+
+
+function logToJson( message, code, level) {
+    return (code===undefined) ? {level: level, message: message} : {level: level, message: message, code: code};
+}
+
 
 
 
 
 module.exports = LogSubModule;
-},{}],9:[function(require,module,exports){
+},{"./run_net":9}],9:[function(require,module,exports){
 /**
  * Run-level Network APIs for nutella
  */
@@ -2679,7 +2808,7 @@ var NetSubModule = function(main_nutella) {
  * @param done_callback
  */
 NetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
-    net.subscribe_to(channel, callback, nutella.appId, nutella.runId, done_callback);
+    net.subscribe_to(channel, callback, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
@@ -2691,7 +2820,7 @@ NetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
  * @param done_callback
  */
 NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
-    net.unsubscribe_from(channel, nutella.appId, nutella.runId, done_callback);
+    net.unsubscribe_from(channel, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
@@ -2703,7 +2832,7 @@ NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
  * @param message
  */
 NetSubModule.prototype.publish = function(channel, message) {
-    net.publish_to(channel, message, nutella.appId, nutella.runId);
+    net.publish_to(channel, message, this.nutella.appId, this.nutella.runId);
 };
 
 
@@ -2716,7 +2845,7 @@ NetSubModule.prototype.publish = function(channel, message) {
  * @param callback
  */
 NetSubModule.prototype.request = function(channel, message, callback) {
-    net.request_to(channel, message, callback, nutella.appId, nutella.runId);
+    net.request_to(channel, message, callback, this.nutella.appId, this.nutella.runId);
 };
 
 
@@ -2729,7 +2858,7 @@ NetSubModule.prototype.request = function(channel, message, callback) {
  * @param done_callback
  */
 NetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
-    net.handle_requests_on(channel, callback, nutella.appId, nutella.runId, done_callback);
+    net.handle_requests_on(channel, callback, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
@@ -2769,8 +2898,8 @@ net.AbstractNet = function(runNutellaInstance) {
  *
  * @param {string} channel - the channel or filter we are subscribing to. Can contain wildcard(s)
  * @param {subscribeCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
@@ -2825,8 +2954,8 @@ net.subscribe_to = function(channel, callback, appId, runId, done_callback) {
  * Unsubscribes from a channel or a set of channels
  *
  * @param {string} channel - we want to unsubscribe from. Can contain wildcard(s)
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever the subscribe is successful
  */
 net.unsubscribe_from = function(channel, appId, runId, done_callback ) {
@@ -2849,8 +2978,8 @@ net.unsubscribe_from = function(channel, appId, runId, done_callback ) {
  *
  * @param {String} channel - the channel we want to publish the message to. *CANNOT* contain wildcard(s)!
  * @param {Object} message - the message we are publishing. This can be any JS variable, even undefined.
- * @param {String} appId - used to pad the channels
- * @param {String} runId - used to pad the channels
+ * @param {String|undefined} appId - used to pad the channels
+ * @param {String|undefined} runId - used to pad the channels
  */
 net.publish_to = function(channel, message, appId, runId) {
     // Pad channel
@@ -2879,8 +3008,8 @@ net.publish_to = function(channel, message, appId, runId) {
  * @param {string} channel - the channel we want to make the request to. *CANNOT* contain wildcard(s)!
  * @param {string} message - the body of the request. This can be any JS variable, even undefined.
  * @param {requestCallback} callback - the callback that is fired whenever a response is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  */
 net.request_to = function( channel, message, callback, appId, runId ) {
     // Pad channel
@@ -2918,8 +3047,8 @@ net.request_to = function( channel, message, callback, appId, runId ) {
  *
  * @param {string} channel - the channel we want to listen for requests on. Can contain wildcard(s).
  * @param {handleCallback} callback - fired whenever a message is received
- * @param {string} appId - used to pad channels
- * @param {string} runId - used to pad channels
+ * @param {string|undefined} appId - used to pad channels
+ * @param {string|undefined} runId - used to pad channels
  * @param {function} done_callback - fired whenever we are ready to handle requests
  */
 net.handle_requests_on = function( channel, callback, appId, runId, done_callback) {

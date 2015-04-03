@@ -26,7 +26,7 @@ var NetSubModule = function(main_nutella) {
  * @param done_callback
  */
 NetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
-    net.subscribe_to(channel, callback, nutella.appId, nutella.runId, done_callback);
+    net.subscribe_to(channel, callback, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
@@ -38,7 +38,7 @@ NetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
  * @param done_callback
  */
 NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
-    net.unsubscribe_from(channel, nutella.appId, nutella.runId, done_callback);
+    net.unsubscribe_from(channel, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
@@ -50,7 +50,7 @@ NetSubModule.prototype.unsubscribe = function(channel, done_callback) {
  * @param message
  */
 NetSubModule.prototype.publish = function(channel, message) {
-    net.publish_to(channel, message, nutella.appId, nutella.runId);
+    net.publish_to(channel, message, this.nutella.appId, this.nutella.runId);
 };
 
 
@@ -63,7 +63,7 @@ NetSubModule.prototype.publish = function(channel, message) {
  * @param callback
  */
 NetSubModule.prototype.request = function(channel, message, callback) {
-    net.request_to(channel, message, callback, nutella.appId, nutella.runId);
+    net.request_to(channel, message, callback, this.nutella.appId, this.nutella.runId);
 };
 
 
@@ -76,7 +76,7 @@ NetSubModule.prototype.request = function(channel, message, callback) {
  * @param done_callback
  */
 NetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
-    net.handle_requests_on(channel, callback, nutella.appId, nutella.runId, done_callback);
+    net.handle_requests_on(channel, callback, this.nutella.appId, this.nutella.runId, done_callback);
 };
 
 
