@@ -76,10 +76,20 @@ AppNetSubModule.prototype.request = function(channel, message, callback) {
  * @param callback
  * @param done_callback
  */
-AppNetSubModule.prototype.handle_requests = function(channel, callback, done_callback) {
+AppNetSubModule.prototype.handle_requests = function (channel, callback, done_callback) {
     this.net.handle_requests_on(channel, callback, this.nutella.appId, undefined, done_callback);
 };
 
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Application-level APIs to communicate at the run-level
+//----------------------------------------------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------------------------------------------
+// Application-level APIs to communicate at the run-level (broadcast)
+//----------------------------------------------------------------------------------------------------------------
 
 
 module.exports = AppNetSubModule;

@@ -30,7 +30,7 @@ var AbstractNet = function(main_nutella) {
  */
 AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, done_callback) {
     // Pad channel
-    var padded_channel = pad_channel(channel, appId, runId);
+    var padded_channel = this.pad_channel(channel, appId, runId);
     // Maintain unique subscriptions
     if(this.subscriptions.indexOf(padded_channel)>-1)
         throw 'You can`t subscribe twice to the same channel`';
@@ -40,9 +40,9 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
     if(this.nutella.mqtt_client.isChannelWildcard(padded_channel))
         mqtt_cb = function(mqtt_message, mqtt_channel) {
             try {
-                var f = extract_fields_from_message(mqtt_message);
+                var f = JSON.parse(mqtt_message);
                 if(f.type==='publish')
-                    callback(f.payload, un_pad_channel(mqtt_channel, appId, runId), f.from);
+                    callback(f.payload, this.un_pad_channel(mqtt_channel, appId, runId), f.from);
             } catch(e) {
                 if (e instanceof SyntaxError) {
                     // Message is not JSON, drop it
@@ -55,7 +55,7 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
     else
         mqtt_cb = function(mqtt_message) {
             try {
-                var f = extract_fields_from_message(mqtt_message);
+                var f = JSON.parse(mqtt_message);
                 if(f.type==='publish')
                     callback(f.payload, f.from);
             } catch(e) {
@@ -86,7 +86,7 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
  */
 AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_callback ) {
     // Pad channel
-    var padded_channel = pad_channel(channel, appId, run_id);
+    var padded_channel = this.pad_channel(channel, appId, run_id);
     var idx = this.subscriptions.indexOf(padded_channel);
     // If we are not subscribed to this channel, return (no error is given)
     if(idx===-1) return;
@@ -109,10 +109,10 @@ AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_ca
  */
 AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     // Pad channel
-    var padded_channel = pad_channel(channel, appId, runId);
+    var padded_channel = this.pad_channel(channel, appId, runId);
     // Throw exception if trying to publish something that is not JSON
     try {
-        var m = prepare_message_for_publish(message, this.nutella);
+        var m = this.prepare_message_for_publish(message, this.nutella);
         this.nutella.mqtt_client.publish(padded_channel, m);
     } catch(e) {
         console.error('Error: you are trying to publish something that is not JSON');
@@ -138,22 +138,24 @@ AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
  * @param {string|undefined} runId - used to pad channels
  */
 AbstractNet.prototype.request_to = function( channel, message, callback, appId, runId ) {
+    // Save nutella reference
+    var nut = this.nutella;
     // Pad channel
-    var padded_channel = pad_channel(channel, appId, runId);
+    var padded_channel = this.pad_channel(channel, appId, runId);
     // Prepare message
-    var m = prepare_message_for_request(message, this.nutella);
+    var m = this.prepare_message_for_request(message, this.nutella);
     //Prepare callback
     var mqtt_cb = function(mqtt_message) {
-        var f = extract_fields_from_message(mqtt_message);
+        var f = JSON.parse(mqtt_message);
         if (f.id===m.id && f.type==='response') {
             callback(f.payload);
-            this.nutella.mqtt_client.unsubscribe(padded_channel, mqtt_cb);
+            nut.mqtt_client.unsubscribe(padded_channel, mqtt_cb);
         }
     };
     // Subscribe
     this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, function() {
         // Publish message
-        this.nutella.mqtt_client.publish( padded_channel, m.message );
+        nut.mqtt_client.publish( padded_channel, m.message );
     });
 
 };
@@ -178,17 +180,19 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
  * @param {function} done_callback - fired whenever we are ready to handle requests
  */
 AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, runId, done_callback) {
+    // Save nutella reference
+    var nut = this.nutella;
     // Pad channel
-    var padded_channel = pad_channel(channel, appId, runId);
+    var padded_channel = this.pad_channel(channel, appId, runId);
     var mqtt_cb = function(request) {
         try {
             // Extract nutella fields
-            var f = extract_fields_from_message(request);
+            var f = JSON.parse(request);
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
             // Execute callback and send response
-            var m = prepare_message_for_response(callback(f.payload, f.from), f.id, this.nutella);
-            this.nutella.mqtt_client.publish( padded_channel, m );
+            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id, nut);
+            nut.mqtt_client.publish( padded_channel, m );
         } catch(e) {
             if (e instanceof SyntaxError) {
                 // Message is not JSON, drop it
@@ -204,14 +208,15 @@ AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, r
 
 
 
-// -------------------------------------------------------------------------------------------------------------
-// Private utility functions
-
-function extract_fields_from_message(message) {
-    return JSON.parse(message);
-}
-
-function pad_channel(channel, app_id, run_id) {
+/**
+ * Pads the channel with app_id and run_id
+ *
+ * @param channel
+ * @param app_id
+ * @param run_id
+ * @return {string} the padded channel
+ */
+AbstractNet.prototype.pad_channel = function(channel, app_id, run_id) {
     if (run_id!==undefined && app_id===undefined)
         throw 'If the run_id is specified, app_id needs to also be specified';
     if (app_id===undefined && run_id===undefined)
@@ -219,10 +224,18 @@ function pad_channel(channel, app_id, run_id) {
     if (app_id!==undefined && run_id===undefined)
         return '/nutella/apps/' + app_id + '/#{channel}';
     return '/nutella/apps/' + app_id + '/runs/' + run_id + '/' + channel;
+};
 
-}
 
-function un_pad_channel(channel, app_id, run_id) {
+/**
+ * Un-pads the channel with app_id and run_id
+ *
+ * @param channel
+ * @param app_id
+ * @param run_id
+ * @return {string} the un-padded channel
+ */
+AbstractNet.prototype.un_pad_channel = function(channel, app_id, run_id) {
     if (run_id!==undefined && app_id===undefined)
         throw 'If the run_id is specified, app_id needs to also be specified';
     if (app_id===undefined && run_id===undefined)
@@ -230,53 +243,54 @@ function un_pad_channel(channel, app_id, run_id) {
     if (app_id!==undefined && run_id===undefined)
         return channel.replace("/nutella/apps/" + app_id + "/", '');
     return channel.replace("/nutella/apps/" + app_id + "/runs/" + run_id + "/", '');
-}
+};
 
 
-function assemble_from(n) {
+
+AbstractNet.prototype.assemble_from = function() {
     var from = {};
-    if(n.run_id===undefined) {
-        if(n.appId===undefined) {
+    if(this.nutella.runId===undefined) {
+        if(this.nutella.appId===undefined) {
             from.type = 'framework';
         } else {
             from.type = 'app';
-            from.app_id = n.appId;
+            from.app_id = this.nutella.appId;
         }
     } else {
         from.type = 'run';
-        from.run_id = n.runId;
+        from.run_id = this.nutella.runId;
     }
-    from.component_id = n.componentId;
-    if (n.resourceId!==undefined)
-        from.resource_id = n.resourceId;
+    from.component_id = this.nutella.componentId;
+    if (this.nutella.resourceId!==undefined)
+        from.resource_id = this.nutella.resourceId;
     return from;
-}
+};
 
 
-function prepare_message_for_publish(message, n) {
+AbstractNet.prototype.prepare_message_for_publish = function (message) {
     if(message===undefined)
-        return JSON.stringify({type: 'publish', from: assemble_from(n)});
-    return JSON.stringify({type: 'publish', from: assemble_from(n), payload: message});
-}
+        return JSON.stringify({type: 'publish', from: this.assemble_from()});
+    return JSON.stringify({type: 'publish', from: this.assemble_from(), payload: message});
+};
 
 
-function prepare_message_for_request(message, n) {
+AbstractNet.prototype.prepare_message_for_request = function (message) {
     var id = Math.floor((Math.random() * 100000) + 1).toString();
     var m = {};
     m.id = id;
     if(message===undefined)
-        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from(n)});
+        m.message = JSON.stringify({id: id, type: 'request', from: this.assemble_from()});
     else
-        m.message = JSON.stringify({id: id, type: 'request', from: assemble_from(n), payload: message});
+        m.message = JSON.stringify({id: id, type: 'request', from: this.assemble_from(), payload: message});
     return m;
-}
+};
 
 
-function prepare_message_for_response(message, id, n) {
+AbstractNet.prototype.prepare_message_for_response = function (message, id) {
     if(message===undefined)
-        return JSON.stringify({id: id, type: 'response', from: assemble_from(n)});
-    return JSON.stringify({id: id, type: 'response', from: assemble_from(n), payload: message});
-}
+        return JSON.stringify({id: id, type: 'response', from: this.assemble_from()});
+    return JSON.stringify({id: id, type: 'response', from: this.assemble_from(), payload: message});
+};
 
 
 

@@ -27,15 +27,5 @@ gulp.task('default', function() {
     // place code for your default task here
 });
 
-//gulp.task('javascript', function () {
-//    // transform regular node stream to gulp (buffered vinyl) stream
-//    var browserified = transform(function(filename) {
-//        var b = browserify({entries: filename, debug: true});
-//        return b.bundle();
-//    });
-//    return gulp.src('./src/nutella_lib.js')
-//        .pipe(browserified)
-//        .pipe(gulp.dest('./dist/'));
-//});
 
 

@@ -12,8 +12,6 @@ var AbstractNet = require('./util/net');
  * @constructor
  */
 var FRNetSubModule = function(main_nutella) {
-    // Store a reference to the main module
-    this.nutella = main_nutella;
     this.net = new AbstractNet(main_nutella);
 };
 
@@ -79,7 +77,7 @@ FRNetSubModule.prototype.handle_requests = function(channel, callback, done_call
 
 
 //----------------------------------------------------------------------------------------------------------------
-// Framework-level APIs to communicate at the run-level
+// Framework-level APIs to communicate at the run-level to a specific run
 //----------------------------------------------------------------------------------------------------------------
 
 /**
@@ -154,15 +152,47 @@ FRNetSubModule.prototype.handle_requests_on_run = function( app_id, run_id, chan
 // Framework-level APIs to communicate at the run-level (broadcast)
 //----------------------------------------------------------------------------------------------------------------
 
+
+/**
+ * Callback for subscribing to all runs
+ * @callback allRunsCb
+ # @param {string} message - the received message. Messages that are not JSON are discarded
+ # @param {String} app_id - the app_id of the channel the message was sent on
+ # @param {String} run_id - the run_id of the channel the message was sent on
+ # @param {Object} from - the sender's identifiers (run_id, app_id, component_id and optionally resource_id)
+ */
+
 /**
  * Allows framework-level APIs to subscribe to a run-level channel *for ALL runs*
  *
  * @param channel
- * @param callback
+ * @param {allRunsCb} callback
  * @param done_callback
  */
 FRNetSubModule.prototype.subscribe_to_all_runs = function( channel, callback, done_callback ) {
-    // TODO
+    //Pad channel
+    var padded_channel = this.net.pad_channel(channel, '+', '+');
+    var mqtt_cb = function(mqtt_message, mqtt_channel) {
+        try {
+            var f = JSON.parse(mqtt_message);
+            var f1 = extractRunIdAndAppId(mqtt_channel);
+            if(f.type==='publish')
+                callback(f.payload, f1.appId, f1.runId, f.from);
+        } catch(e) {
+            if (e instanceof SyntaxError) {
+                // Message is not JSON, drop it
+            } else {
+                // Bubble up whatever exception is thrown
+                throw e;
+            }
+        }
+    };
+    // Add to subscriptions, save mqtt callback and subscribe
+    this.net.subscriptions.push(padded_channel);
+    this.net.callbacks.push(mqtt_cb);
+    this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
+    // Notify subscriptions bot
+    this.publish_to('subscriptions', {channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -170,6 +200,7 @@ FRNetSubModule.prototype.subscribe_to_all_runs = function( channel, callback, do
  * Allows framework-level APIs to unsubscribe from a run-level channel *for ALL runs*
  *
  * @param channel
+ * @param done_callback
  */
 FRNetSubModule.prototype.unsubscribe_from_all_runs = function(channel, done_callback) {
     this.net.unsubscribe_from(channel, '+', '+', done_callback);
@@ -183,7 +214,7 @@ FRNetSubModule.prototype.unsubscribe_from_all_runs = function(channel, done_call
  * @param message
  */
 FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
-    // TODO need runslist!!!!
+    // TODO need runs list!
 };
 
 
@@ -195,27 +226,57 @@ FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
  * @param callback
  */
 FRNetSubModule.prototype.request_to_all_runs = function(channel, request, callback) {
-    // TODO need runlist!
+    // TODO need runs list!
 };
 
+/**
+ * Callback that is used to handle messages from all runs
+ * @callback handle_all_runs_cb
+ * @param {string} payload - the received message (request). Messages that are not JSON are discarded
+ * @param {string} app_id - the app_id of the channel the request was sent on
+ * @param {string} run_id - the run_id of the channel the request was sent on
+ * @param {Object} from - the sender's identifiers (from containing, run_id, app_id, component_id and optionally resource_id)
+ * @return {Object} the response sent back to the client that performed the request. Whatever is returned by the callback is marshaled into a JSON string and sent via MQTT.
+ */
 
 /**
  * Allows framework-level APIs to handle requests to a run-level channel *for ALL runs*
  *
  * @param channel
- * @param callback
+ * @param {handle_all_runs_cb} callback
  * @param done_callback
  */
 FRNetSubModule.prototype.handle_requests_on_all_runs = function(channel, callback, done_callback) {
-    // TODO
+    // Pad channel
+    var padded_channel = this.net.pad_channel(channel, '+', '+');
+    var ln = this.net;
+    var mqtt_cb = function(mqtt_message, mqtt_channel) {
+        try {
+            var f = JSON.parse(mqtt_message);
+            var f1 = extractRunIdAndAppId(mqtt_channel);
+            // Only handle requests that have proper id set
+            if(f.type!=='request' || f.id===undefined) return;
+            // Execute callback and send response
+            var m = ln.prepare_message_for_response(callback(f.payload, f1.appId, f1.runId, f.from), f.id);
+            ln.nutella.mqtt_client.publish( padded_channel, m );
+        } catch(e) {
+            if (e instanceof SyntaxError) {
+                // Message is not JSON, drop it
+            } else {
+                // Bubble up whatever exception is thrown
+                throw e;
+            }
+        }
+    };
+    this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
 };
-
 
 
 
 //----------------------------------------------------------------------------------------------------------------
 // Framework-level APIs to communicate at the application-level
 //----------------------------------------------------------------------------------------------------------------
+
 
 /**
  * Allows framework-level APIs to subscribe to an app-level channel
@@ -285,9 +346,77 @@ FRNetSubModule.prototype.handle_requests_on_app = function(app_id, channel, call
 //----------------------------------------------------------------------------------------------------------------
 
 
+/**
+ * Allows framework-level APIs to subscribe to an app-level channel *for ALL apps*
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
 FRNetSubModule.prototype.subscribe_to_all_apps = function(channel, callback, done_callback) {
-
+    // TODO
 };
+
+
+/**
+ * Allows framework-level APIs to unsubscribe from an app-level channel *for ALL apps*
+ *
+ * @param channel
+ * @param done_callback
+ */
+FRNetSubModule.prototype.unsubscribe_from_all_apps = function(channel, done_callback) {
+    this.net.unsubscribe_from(channel, '+', undefined, done_callback);
+};
+
+
+/**
+ * Allows framework-level APIs to publish a message to an app-level channel *for ALL apps*
+ *
+ * @param channel
+ * @param message
+ */
+FRNetSubModule.prototype.publish_to_all_apps = function(channel, message) {
+    // TODO need runs list!!!
+};
+
+
+/**
+ * Allows framework-level APIs to send a request to an app-level channel *for ALL apps*
+ *
+ * @param channel
+ * @param request
+ * @param callback
+ */
+FRNetSubModule.prototype.request_to_all_apps = function(channel, request, callback) {
+    // TODO need runs list!!!
+};
+
+
+/**
+ * Allows framework-level APIs to handle requests to app-level channel *for ALL runs*
+ *
+ * @param channel
+ * @param callback
+ * @param done_callback
+ */
+FRNetSubModule.prototype.handle_requests_on_all_apps = function(channel, callback, done_callback) {
+    // TODO
+};
+
+
+// Utility functions
+
+
+function extractRunIdAndAppId(mqtt_channel) {
+    var sp =  mqtt_channel.replace('/nutella/apps/', '').split('/');
+    return {appId: sp[0], runId: sp[2]};
+}
+
+function extractAppId(mqtt_channel) {
+    var sp =  mqtt_channel.replace('/nutella/apps/', '').split('/');
+    return sp[0];
+}
+
 
 
 
