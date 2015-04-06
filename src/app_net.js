@@ -86,10 +86,13 @@ AppNetSubModule.prototype.handle_requests = function (channel, callback, done_ca
 // Application-level APIs to communicate at the run-level
 //----------------------------------------------------------------------------------------------------------------
 
+// TODO, finish the framework level equivalent and then work on this
 
 //----------------------------------------------------------------------------------------------------------------
 // Application-level APIs to communicate at the run-level (broadcast)
 //----------------------------------------------------------------------------------------------------------------
+
+// TODO, finish the framework level equivalent and then work on this
 
 
 module.exports = AppNetSubModule;

@@ -2672,10 +2672,13 @@ AppNetSubModule.prototype.handle_requests = function (channel, callback, done_ca
 // Application-level APIs to communicate at the run-level
 //----------------------------------------------------------------------------------------------------------------
 
+// TODO, finish the framework level equivalent and then work on this
 
 //----------------------------------------------------------------------------------------------------------------
 // Application-level APIs to communicate at the run-level (broadcast)
 //----------------------------------------------------------------------------------------------------------------
+
+// TODO, finish the framework level equivalent and then work on this
 
 
 module.exports = AppNetSubModule;
@@ -3098,16 +3101,45 @@ FRNetSubModule.prototype.handle_requests_on_app = function(app_id, channel, call
 // Framework-level APIs to communicate at the application-level (broadcast)
 //----------------------------------------------------------------------------------------------------------------
 
+/**
+ * Callback used to handle all messages received when subscribing to all applications
+ * @callback subscribeToAllAppsCb
+ * @param {string} message - the received message. Messages that are not JSON are discarded
+ * @param {string} app_id - the app_id of the channel the message was sent on
+ * @param {Object} from - the sender's identifiers (run_id, app_id, component_id and optionally resource_id)
+ */
 
 /**
  * Allows framework-level APIs to subscribe to an app-level channel *for ALL apps*
  *
  * @param channel
- * @param callback
+ * @param {subscribeToAllAppsCb} callback
  * @param done_callback
  */
 FRNetSubModule.prototype.subscribe_to_all_apps = function(channel, callback, done_callback) {
-    // TODO
+    //Pad channel
+    var padded_channel = this.net.pad_channel(channel, '+', undefined);
+    var mqtt_cb = function(mqtt_message, mqtt_channel) {
+        try {
+            var f = JSON.parse(mqtt_message);
+            var app_id = extractAppId(mqtt_channel);
+            if(f.type==='publish')
+                callback(f.payload, app_id, f.from);
+        } catch(e) {
+            if (e instanceof SyntaxError) {
+                // Message is not JSON, drop it
+            } else {
+                // Bubble up whatever exception is thrown
+                throw e;
+            }
+        }
+    };
+    // Add to subscriptions, save mqtt callback and subscribe
+    this.net.subscriptions.push(padded_channel);
+    this.net.callbacks.push(mqtt_cb);
+    this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
+    // Notify subscriptions bot
+    this.publish_to('subscriptions', {channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -3146,14 +3178,44 @@ FRNetSubModule.prototype.request_to_all_apps = function(channel, request, callba
 
 
 /**
+ * This callback is used to handle messages coming from all applications
+ * @callback handleAllAppsCb
+ * @param {string} request - the received message (request). Messages that are not JSON are discarded.
+ * @param {string} app_id - the app_id of the channel the request was sent on
+ * @param {Object} from - the sender's identifiers (from containing, run_id, app_id, component_id and optionally resource_id)
+ * @return {Object} The response sent back to the client that performed the request. Whatever is returned by the callback is marshaled into a JSON string and sent via MQTT.
+ */
+
+/**
  * Allows framework-level APIs to handle requests to app-level channel *for ALL runs*
  *
  * @param channel
- * @param callback
+ * @param {handleAllAppsCb} callback
  * @param done_callback
  */
 FRNetSubModule.prototype.handle_requests_on_all_apps = function(channel, callback, done_callback) {
-    // TODO
+    // Pad channel
+    var padded_channel = this.net.pad_channel(channel, '+', undefined);
+    var ln = this.net;
+    var mqtt_cb = function(mqtt_message, mqtt_channel) {
+        try {
+            var f = JSON.parse(mqtt_message);
+            var f1 = extractRunIdAndAppId(mqtt_channel);
+            // Only handle requests that have proper id set
+            if(f.type!=='request' || f.id===undefined) return;
+            // Execute callback and send response
+            var m = ln.prepare_message_for_response(callback(f.payload, f1.appId, f1.runId, f.from), f.id);
+            ln.nutella.mqtt_client.publish( padded_channel, m );
+        } catch(e) {
+            if (e instanceof SyntaxError) {
+                // Message is not JSON, drop it
+            } else {
+                // Bubble up whatever exception is thrown
+                throw e;
+            }
+        }
+    };
+    this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
 };
 
 
