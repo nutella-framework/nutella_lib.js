@@ -2775,8 +2775,8 @@ AppNetSubModule.prototype.subscribe_to_all_runs = function(channel, callback, do
     this.net.subscriptions.push(padded_channel);
     this.net.callbacks.push(mqtt_cb);
     this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
-    // Notify subscriptions bot
-    this.publish_to('subscriptions', {channel:  padded_channel}, this.net.nutella.appId, undefined);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'subscribe', channel:  padded_channel}, this.net.nutella.appId, undefined);
 };
 
 
@@ -2847,6 +2847,8 @@ AppNetSubModule.prototype.handle_requests_on_all_runs = function(channel, callba
         }
     };
     this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'handle_requests', channel:  padded_channel}, this.net.nutella.appId, undefined);
 };
 
 
@@ -3126,8 +3128,8 @@ FRNetSubModule.prototype.subscribe_to_all_runs = function( channel, callback, do
     this.net.subscriptions.push(padded_channel);
     this.net.callbacks.push(mqtt_cb);
     this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
-    // Notify subscriptions bot
-    this.publish_to('subscriptions', {channel:  padded_channel}, undefined, undefined);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'subscribe', channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -3213,6 +3215,8 @@ FRNetSubModule.prototype.handle_requests_on_all_runs = function(channel, callbac
         }
     };
     this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'handle_requests', channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -3326,8 +3330,8 @@ FRNetSubModule.prototype.subscribe_to_all_apps = function(channel, callback, don
     this.net.subscriptions.push(padded_channel);
     this.net.callbacks.push(mqtt_cb);
     this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
-    // Notify subscriptions bot
-    this.publish_to('subscriptions', {channel:  padded_channel}, undefined, undefined);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'subscribe', channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -3408,6 +3412,8 @@ FRNetSubModule.prototype.handle_requests_on_all_apps = function(channel, callbac
         }
     };
     this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'handle_requests', channel:  padded_channel}, undefined, undefined);
 };
 
 
@@ -3772,8 +3778,8 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
     this.subscriptions.push(padded_channel);
     this.callbacks.push(mqtt_cb);
     this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
-    // Notify subscriptions bot
-    this.publish_to('subscriptions', {channel:  padded_channel}, appId, runId);
+    // Notify subscription
+    this.publish_to('subscriptions', {type: 'subscribe', channel:  padded_channel}, appId, runId);
 };
 
 
@@ -3904,7 +3910,9 @@ AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, r
         }
     };
     // Subscribe to the channel
-    this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback)
+    this.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
+    // Notify subscription
+    this.publish_to('subscriptions', {type: 'handle_requests', channel:  padded_channel}, appId, runId);
 };
 
 
@@ -3947,9 +3955,14 @@ AbstractNet.prototype.un_pad_channel = function(channel, app_id, run_id) {
 };
 
 
-
+/**
+ * Assembles the unique ID of the component, starting from app_id, run_id, component_id and resource_id
+ *
+ * @return {Object} an object containing the unique ID of the component sending the message
+ */
 AbstractNet.prototype.assemble_from = function() {
     var from = {};
+    // Set type, run_id and app_id whenever appropriate
     if(this.nutella.runId===undefined) {
         if(this.nutella.appId===undefined) {
             from.type = 'framework';
@@ -3962,13 +3975,21 @@ AbstractNet.prototype.assemble_from = function() {
         from.app_id = this.nutella.appId;
         from.run_id = this.nutella.runId;
     }
+    // Set the component_id
     from.component_id = this.nutella.componentId;
+    // Set resource_id, if defined
     if (this.nutella.resourceId!==undefined)
         from.resource_id = this.nutella.resourceId;
     return from;
 };
 
 
+/**
+ * Prepares a message for a publish
+ *
+ * @param {Object} message - the message content
+ * @return {string} the serialized message, ready to be shipped over the net
+ */
 AbstractNet.prototype.prepare_message_for_publish = function (message) {
     if(message===undefined)
         return JSON.stringify({type: 'publish', from: this.assemble_from()});
@@ -3976,6 +3997,12 @@ AbstractNet.prototype.prepare_message_for_publish = function (message) {
 };
 
 
+/**
+ * Prepares a message for a request
+ *
+ * @param {Object} message - the message content
+ * @return {Object} the serialized response, ready to be shipped over the net and the id of the response
+ */
 AbstractNet.prototype.prepare_message_for_request = function (message) {
     var id = Math.floor((Math.random() * 100000) + 1).toString();
     var m = {};
@@ -3988,10 +4015,17 @@ AbstractNet.prototype.prepare_message_for_request = function (message) {
 };
 
 
-AbstractNet.prototype.prepare_message_for_response = function (message, id) {
-    if(message===undefined)
+/**
+ * Prepares a message for a response
+ *
+ * @param {Object} response - the response content
+ * @param {string} id - the original request id
+ * @return {string} the serialized message, ready to be shipped over the net
+ */
+AbstractNet.prototype.prepare_message_for_response = function (response, id) {
+    if(response===undefined)
         return JSON.stringify({id: id, type: 'response', from: this.assemble_from()});
-    return JSON.stringify({id: id, type: 'response', from: this.assemble_from(), payload: message});
+    return JSON.stringify({id: id, type: 'response', from: this.assemble_from(), payload: response});
 };
 
 

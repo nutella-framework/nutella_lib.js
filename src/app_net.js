@@ -189,8 +189,8 @@ AppNetSubModule.prototype.subscribe_to_all_runs = function(channel, callback, do
     this.net.subscriptions.push(padded_channel);
     this.net.callbacks.push(mqtt_cb);
     this.net.nutella.mqtt_client.subscribe(padded_channel, mqtt_cb, done_callback);
-    // Notify subscriptions bot
-    this.publish_to('subscriptions', {channel:  padded_channel}, this.net.nutella.appId, undefined);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'subscribe', channel:  padded_channel}, this.net.nutella.appId, undefined);
 };
 
 
@@ -261,6 +261,8 @@ AppNetSubModule.prototype.handle_requests_on_all_runs = function(channel, callba
         }
     };
     this.net.nutella.mqtt_client.subscribe( padded_channel, mqtt_cb, done_callback);
+    // Notify subscription
+    this.net.publish_to('subscriptions', {type: 'handle_requests', channel:  padded_channel}, this.net.nutella.appId, undefined);
 };
 
 
