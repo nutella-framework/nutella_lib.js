@@ -2598,8 +2598,6 @@ var AbstractNet = require('./util/net');
  * @constructor
  */
 var AppNetSubModule = function(main_nutella) {
-    // Store a reference to the main module
-    this.nutella = main_nutella;
     this.net = new AbstractNet(main_nutella);
 };
 
@@ -2613,7 +2611,7 @@ var AppNetSubModule = function(main_nutella) {
  * @param done_callback
  */
 AppNetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
-    this.net.subscribe_to(channel, callback, this.nutella.appId, undefined, done_callback);
+    this.net.subscribe_to(channel, callback, this.net.nutella.appId, undefined, done_callback);
 };
 
 
@@ -2625,7 +2623,7 @@ AppNetSubModule.prototype.subscribe = function(channel, callback, done_callback)
  * @param done_callback
  */
 AppNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
-    this.net.unsubscribe_from(channel, this.nutella.appId, undefined, done_callback);
+    this.net.unsubscribe_from(channel, this.net.nutella.appId, undefined, done_callback);
 };
 
 
@@ -2637,7 +2635,7 @@ AppNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
  * @param message
  */
 AppNetSubModule.prototype.publish = function(channel, message) {
-    this.net.publish_to(channel, message, this.nutella.appId, undefined);
+    this.net.publish_to(channel, message, this.net.nutella.appId, undefined);
 };
 
 
@@ -2650,7 +2648,7 @@ AppNetSubModule.prototype.publish = function(channel, message) {
  * @param callback
  */
 AppNetSubModule.prototype.request = function(channel, message, callback) {
-    this.net.request_to(channel, message, callback, this.nutella.appId, undefined);
+    this.net.request_to(channel, message, callback, this.net.nutella.appId, undefined);
 };
 
 
@@ -2663,7 +2661,7 @@ AppNetSubModule.prototype.request = function(channel, message, callback) {
  * @param done_callback
  */
 AppNetSubModule.prototype.handle_requests = function (channel, callback, done_callback) {
-    this.net.handle_requests_on(channel, callback, this.nutella.appId, undefined, done_callback);
+    this.net.handle_requests_on(channel, callback, this.net.nutella.appId, undefined, done_callback);
 };
 
 
@@ -3312,12 +3310,10 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     // Fetch the runs list
     this.app.net.request('app_runs_list', undefined, function(response) {
         this.runs_list = response;
-        console.log(response);
     }.bind(this));
     // Subscribe to runs list updates
     this.app.net.subscribe('app_runs_list', function(message, from) {
         this.runs_list = message;
-        console.log(message);
     }.bind(this));
 };
 
@@ -3624,7 +3620,7 @@ AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     var padded_channel = this.pad_channel(channel, appId, runId);
     // Throw exception if trying to publish something that is not JSON
     try {
-        var m = this.prepare_message_for_publish(message, this.nutella);
+        var m = this.prepare_message_for_publish(message);
         this.nutella.mqtt_client.publish(padded_channel, m);
     } catch(e) {
         console.error('Error: you are trying to publish something that is not JSON');
@@ -3655,7 +3651,7 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
     // Pad channel
     var padded_channel = this.pad_channel(channel, appId, runId);
     // Prepare message
-    var m = this.prepare_message_for_request(message, this.nutella);
+    var m = this.prepare_message_for_request(message);
     //Prepare callback
     var mqtt_cb = function(mqtt_message) {
         var f = JSON.parse(mqtt_message);
@@ -3703,7 +3699,7 @@ AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, r
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
             // Execute callback and send response
-            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id, nut);
+            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id);
             nut.mqtt_client.publish( padded_channel, m );
         } catch(e) {
             if (e instanceof SyntaxError) {
@@ -3734,7 +3730,7 @@ AbstractNet.prototype.pad_channel = function(channel, app_id, run_id) {
     if (app_id===undefined && run_id===undefined)
         return '/nutella/' + channel;
     if (app_id!==undefined && run_id===undefined)
-        return '/nutella/apps/' + app_id + '/#{channel}';
+        return '/nutella/apps/' + app_id + '/' + channel;
     return '/nutella/apps/' + app_id + '/runs/' + run_id + '/' + channel;
 };
 

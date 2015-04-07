@@ -112,7 +112,7 @@ AbstractNet.prototype.publish_to = function(channel, message, appId, runId) {
     var padded_channel = this.pad_channel(channel, appId, runId);
     // Throw exception if trying to publish something that is not JSON
     try {
-        var m = this.prepare_message_for_publish(message, this.nutella);
+        var m = this.prepare_message_for_publish(message);
         this.nutella.mqtt_client.publish(padded_channel, m);
     } catch(e) {
         console.error('Error: you are trying to publish something that is not JSON');
@@ -143,7 +143,7 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
     // Pad channel
     var padded_channel = this.pad_channel(channel, appId, runId);
     // Prepare message
-    var m = this.prepare_message_for_request(message, this.nutella);
+    var m = this.prepare_message_for_request(message);
     //Prepare callback
     var mqtt_cb = function(mqtt_message) {
         var f = JSON.parse(mqtt_message);
@@ -191,7 +191,7 @@ AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, r
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
             // Execute callback and send response
-            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id, nut);
+            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id);
             nut.mqtt_client.publish( padded_channel, m );
         } catch(e) {
             if (e instanceof SyntaxError) {
@@ -222,7 +222,7 @@ AbstractNet.prototype.pad_channel = function(channel, app_id, run_id) {
     if (app_id===undefined && run_id===undefined)
         return '/nutella/' + channel;
     if (app_id!==undefined && run_id===undefined)
-        return '/nutella/apps/' + app_id + '/#{channel}';
+        return '/nutella/apps/' + app_id + '/' + channel;
     return '/nutella/apps/' + app_id + '/runs/' + run_id + '/' + channel;
 };
 

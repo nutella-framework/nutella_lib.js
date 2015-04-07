@@ -12,8 +12,6 @@ var AbstractNet = require('./util/net');
  * @constructor
  */
 var AppNetSubModule = function(main_nutella) {
-    // Store a reference to the main module
-    this.nutella = main_nutella;
     this.net = new AbstractNet(main_nutella);
 };
 
@@ -27,7 +25,7 @@ var AppNetSubModule = function(main_nutella) {
  * @param done_callback
  */
 AppNetSubModule.prototype.subscribe = function(channel, callback, done_callback) {
-    this.net.subscribe_to(channel, callback, this.nutella.appId, undefined, done_callback);
+    this.net.subscribe_to(channel, callback, this.net.nutella.appId, undefined, done_callback);
 };
 
 
@@ -39,7 +37,7 @@ AppNetSubModule.prototype.subscribe = function(channel, callback, done_callback)
  * @param done_callback
  */
 AppNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
-    this.net.unsubscribe_from(channel, this.nutella.appId, undefined, done_callback);
+    this.net.unsubscribe_from(channel, this.net.nutella.appId, undefined, done_callback);
 };
 
 
@@ -51,7 +49,7 @@ AppNetSubModule.prototype.unsubscribe = function(channel, done_callback) {
  * @param message
  */
 AppNetSubModule.prototype.publish = function(channel, message) {
-    this.net.publish_to(channel, message, this.nutella.appId, undefined);
+    this.net.publish_to(channel, message, this.net.nutella.appId, undefined);
 };
 
 
@@ -64,7 +62,7 @@ AppNetSubModule.prototype.publish = function(channel, message) {
  * @param callback
  */
 AppNetSubModule.prototype.request = function(channel, message, callback) {
-    this.net.request_to(channel, message, callback, this.nutella.appId, undefined);
+    this.net.request_to(channel, message, callback, this.net.nutella.appId, undefined);
 };
 
 
@@ -77,7 +75,7 @@ AppNetSubModule.prototype.request = function(channel, message, callback) {
  * @param done_callback
  */
 AppNetSubModule.prototype.handle_requests = function (channel, callback, done_callback) {
-    this.net.handle_requests_on(channel, callback, this.nutella.appId, undefined, done_callback);
+    this.net.handle_requests_on(channel, callback, this.net.nutella.appId, undefined, done_callback);
 };
 
 

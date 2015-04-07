@@ -59,12 +59,10 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     // Fetch the runs list
     this.app.net.request('app_runs_list', undefined, function(response) {
         this.runs_list = response;
-        console.log(response);
     }.bind(this));
     // Subscribe to runs list updates
     this.app.net.subscribe('app_runs_list', function(message, from) {
         this.runs_list = message;
-        console.log(message);
     }.bind(this));
 };
 
