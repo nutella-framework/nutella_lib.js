@@ -84,6 +84,9 @@ nutella.parseURLParameters = function () {
 };
 
 
+nutella.version = '0.4.2';
+
+
 // Exports nutella object
 module.exports = nutella;
 },{"./nutella_i_browser":10}],2:[function(require,module,exports){
