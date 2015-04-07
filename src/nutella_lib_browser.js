@@ -83,7 +83,7 @@ nutella.parseURLParameters = function () {
 };
 
 
-nutella.version = '0.4.2';
+nutella.version = '0.4.3';
 
 
 // Exports nutella object
