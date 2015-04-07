@@ -10,11 +10,17 @@
 
 <script>
     // Initialize nutella
-//    var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_node_bot');
+//    var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_run_interface');
 //    nutella.setResourceId('r_id');
 
-    var n = NUTELLA.initFramework('ltg.evl.uic.edu', 'my_compo');
-    n.f.net.publish('ch', 'mex');
+    // Initialize nutella app interface
+//    var nutella = NUTELLA.initApp('ltg.evl.uic.edu', 'test', 'demo_app_interface');
+//    nutella.setResourceId('r_id');
+
+    // Initialize nutella fr interface
+//    var nutella = NUTELLA.initFramework('ltg.evl.uic.edu', 'demo_fr_interface');
+//    nutella.setResourceId('r_id');
+    // nutella.f.net.publish_to_all_runs('channel', 'message');
 
     // Simple channel pub/sub
     //    nutella.net.subscribe('channel', function(message, from) {

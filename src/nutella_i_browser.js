@@ -54,6 +54,18 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     this.componentId = component_id;
     // Initialized the various sub-modules
     this.app = new AppSubModule(this);
+    //Initialize the runs list
+    this.runs_list = {};
+    // Fetch the runs list
+    this.app.net.request('app_runs_list', undefined, function(response) {
+        this.runs_list = response;
+        console.log(response);
+    }.bind(this));
+    // Subscribe to runs list updates
+    this.app.net.subscribe('app_runs_list', function(message, from) {
+        this.runs_list = message;
+        console.log(message);
+    }.bind(this));
 };
 
 /**
@@ -76,8 +88,18 @@ var FrNutellaInstance = function (broker_hostname, component_id) {
     //Initialize parameters
     this.mqtt_client = new SimpleMQTTClient(broker_hostname);
     this.componentId = component_id;
-    // Initialized the various sub-modules
+    // Initialize the various sub-modules
     this.f = new FrSubModule(this);
+    //Initialize the runs list
+    this.runs_list = {};
+    // Fetch the runs list
+    this.f.net.request('runs_list', undefined, function(response) {
+        this.runs_list = response;
+    }.bind(this));
+    // Subscribe to runs list updates
+    this.f.net.subscribe('runs_list', function(message, from) {
+        this.runs_list = message;
+    }.bind(this));
 };
 
 /**
@@ -85,7 +107,7 @@ var FrNutellaInstance = function (broker_hostname, component_id) {
  *
  * @param {string} resource_id - the resource_id associated to this instance of nutella
  */
-AppNutellaInstance.prototype.setResourceId = function(resource_id){
+FrNutellaInstance.prototype.setResourceId = function(resource_id){
     this.resourceId = resource_id;
 };
 

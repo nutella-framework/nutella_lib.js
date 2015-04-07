@@ -214,7 +214,11 @@ FRNetSubModule.prototype.unsubscribe_from_all_runs = function(channel, done_call
  * @param message
  */
 FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
-    // TODO need runs list!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.nutella.runs_list[app_id].runs.forEach(function(run_id){
+            this.net.publish_to(channel, message, app_id, run_id);
+        }.bind(this));
+    }.bind(this));
 };
 
 
@@ -226,7 +230,12 @@ FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
  * @param callback
  */
 FRNetSubModule.prototype.request_to_all_runs = function(channel, request, callback) {
-    // TODO need runs list!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.nutella.runs_list[app_id].runs.forEach(function(run_id){
+            this.net.publish_to(channel, message, app_id, run_id);
+            this.net.request_to(channel, request, callback, app_id, run_id);
+        }.bind(this));
+    }.bind(this));
 };
 
 /**
@@ -405,7 +414,9 @@ FRNetSubModule.prototype.unsubscribe_from_all_apps = function(channel, done_call
  * @param message
  */
 FRNetSubModule.prototype.publish_to_all_apps = function(channel, message) {
-    // TODO need runs list!!!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.publish_to(channel, message, app_id, undefined);
+    }.bind(this));
 };
 
 
@@ -417,7 +428,9 @@ FRNetSubModule.prototype.publish_to_all_apps = function(channel, message) {
  * @param callback
  */
 FRNetSubModule.prototype.request_to_all_apps = function(channel, request, callback) {
-    // TODO need runs list!!!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.request_to(channel, request, callback, app_id, undefined);
+    }.bind(this));
 };
 
 

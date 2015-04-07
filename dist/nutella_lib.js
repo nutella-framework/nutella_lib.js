@@ -2970,7 +2970,11 @@ FRNetSubModule.prototype.unsubscribe_from_all_runs = function(channel, done_call
  * @param message
  */
 FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
-    // TODO need runs list!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.nutella.runs_list[app_id].runs.forEach(function(run_id){
+            this.net.publish_to(channel, message, app_id, run_id);
+        }.bind(this));
+    }.bind(this));
 };
 
 
@@ -2982,7 +2986,12 @@ FRNetSubModule.prototype.publish_to_all_runs = function( channel, message ) {
  * @param callback
  */
 FRNetSubModule.prototype.request_to_all_runs = function(channel, request, callback) {
-    // TODO need runs list!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.nutella.runs_list[app_id].runs.forEach(function(run_id){
+            this.net.publish_to(channel, message, app_id, run_id);
+            this.net.request_to(channel, request, callback, app_id, run_id);
+        }.bind(this));
+    }.bind(this));
 };
 
 /**
@@ -3161,7 +3170,9 @@ FRNetSubModule.prototype.unsubscribe_from_all_apps = function(channel, done_call
  * @param message
  */
 FRNetSubModule.prototype.publish_to_all_apps = function(channel, message) {
-    // TODO need runs list!!!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.publish_to(channel, message, app_id, undefined);
+    }.bind(this));
 };
 
 
@@ -3173,7 +3184,9 @@ FRNetSubModule.prototype.publish_to_all_apps = function(channel, message) {
  * @param callback
  */
 FRNetSubModule.prototype.request_to_all_apps = function(channel, request, callback) {
-    // TODO need runs list!!!
+    Object.keys(this.net.nutella.runs_list).forEach(function(app_id) {
+        this.net.request_to(channel, request, callback, app_id, undefined);
+    }.bind(this));
 };
 
 
@@ -3294,6 +3307,18 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     this.componentId = component_id;
     // Initialized the various sub-modules
     this.app = new AppSubModule(this);
+    //Initialize the runs list
+    this.runs_list = {};
+    // Fetch the runs list
+    this.app.net.request('app_runs_list', undefined, function(response) {
+        this.runs_list = response;
+        console.log(response);
+    }.bind(this));
+    // Subscribe to runs list updates
+    this.app.net.subscribe('app_runs_list', function(message, from) {
+        this.runs_list = message;
+        console.log(message);
+    }.bind(this));
 };
 
 /**
@@ -3316,8 +3341,18 @@ var FrNutellaInstance = function (broker_hostname, component_id) {
     //Initialize parameters
     this.mqtt_client = new SimpleMQTTClient(broker_hostname);
     this.componentId = component_id;
-    // Initialized the various sub-modules
+    // Initialize the various sub-modules
     this.f = new FrSubModule(this);
+    //Initialize the runs list
+    this.runs_list = {};
+    // Fetch the runs list
+    this.f.net.request('runs_list', undefined, function(response) {
+        this.runs_list = response;
+    }.bind(this));
+    // Subscribe to runs list updates
+    this.f.net.subscribe('runs_list', function(message, from) {
+        this.runs_list = message;
+    }.bind(this));
 };
 
 /**
@@ -3325,7 +3360,7 @@ var FrNutellaInstance = function (broker_hostname, component_id) {
  *
  * @param {string} resource_id - the resource_id associated to this instance of nutella
  */
-AppNutellaInstance.prototype.setResourceId = function(resource_id){
+FrNutellaInstance.prototype.setResourceId = function(resource_id){
     this.resourceId = resource_id;
 };
 
