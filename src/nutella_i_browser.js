@@ -28,6 +28,10 @@ var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id
     // Initialized the various sub-modules
     this.net = new NetSubModule(this);
     this.log = new LogSubModule(this);
+    // Start pinging
+    setInterval(function(){
+        this.net.publish('pings', 'ping');
+    }.bind(this),5000);
 };
 
 /**
@@ -55,7 +59,7 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     // Initialized the various sub-modules
     this.app = new AppSubModule(this);
     //Initialize the runs list
-    this.runs_list = {};
+    this.runs_list = [];
     // Fetch the runs list
     this.app.net.request('app_runs_list', undefined, function(response) {
         this.runs_list = response;
@@ -64,6 +68,10 @@ var AppNutellaInstance = function (broker_hostname, app_id, component_id) {
     this.app.net.subscribe('app_runs_list', function(message, from) {
         this.runs_list = message;
     }.bind(this));
+    // Start pinging
+    setInterval(function(){
+        this.app.net.publish('pings', 'ping');
+    }.bind(this),5000);
 };
 
 /**
@@ -98,6 +106,10 @@ var FrNutellaInstance = function (broker_hostname, component_id) {
     this.f.net.subscribe('runs_list', function(message, from) {
         this.runs_list = message;
     }.bind(this));
+    // Start pinging
+    setInterval(function(){
+        this.f.net.publish('pings', 'ping');
+    }.bind(this),5000);
 };
 
 /**

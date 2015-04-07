@@ -258,6 +258,7 @@ AbstractNet.prototype.assemble_from = function() {
         }
     } else {
         from.type = 'run';
+        from.app_id = this.nutella.appId;
         from.run_id = this.nutella.runId;
     }
     from.component_id = this.nutella.componentId;
