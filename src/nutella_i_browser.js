@@ -9,6 +9,7 @@ var AppSubModule = require('./app_core_browser');
 var FrSubModule = require('./fr_core_browser');
 var NetSubModule = require('./run_net');
 var LogSubModule = require('./run_log');
+var LocationSubModule = require('./run_location');
 
 
 /**
@@ -28,6 +29,7 @@ var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id
     // Initialized the various sub-modules
     this.net = new NetSubModule(this);
     this.log = new LogSubModule(this);
+    this.location = new LocationSubModule(this);
     // Start pinging
     setInterval(function(){
         this.net.publish('pings', 'ping');
