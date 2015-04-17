@@ -86,7 +86,7 @@ AbstractNet.prototype.subscribe_to = function(channel, callback, appId, runId, d
  */
 AbstractNet.prototype.unsubscribe_from = function(channel, appId, runId, done_callback ) {
     // Pad channel
-    var padded_channel = this.pad_channel(channel, appId, run_id);
+    var padded_channel = this.pad_channel(channel, appId, runId);
     var idx = this.subscriptions.indexOf(padded_channel);
     // If we are not subscribed to this channel, return (no error is given)
     if(idx===-1) return;
