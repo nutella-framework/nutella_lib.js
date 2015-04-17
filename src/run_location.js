@@ -12,6 +12,10 @@ var LocationSubModule = function(main_nutella) {
             self._resources[resource.rid] = resource;
         });
         this._initialized = true;
+
+        if(readyCallback != undefined) {
+            readyCallback();
+        }
     });
 
     // Update resources
@@ -47,6 +51,9 @@ exitResources = [];
 // Enter and exit callbacks
 enterCallback = undefined;
 exitCallback = undefined;
+
+// Ready callback
+readyCallback = undefined;
 
 
 Object.defineProperty(LocationSubModule.prototype, 'resources', {
@@ -242,6 +249,10 @@ LocationSubModule.prototype.resourceEntered = function(callback) {
 
 LocationSubModule.prototype.resourceExited = function(callback) {
     exitCallback = callback;
+};
+
+LocationSubModule.prototype.ready = function(callback) {
+    readyCallback = callback;
 };
 
 module.exports = LocationSubModule;

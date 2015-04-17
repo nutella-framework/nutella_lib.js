@@ -13,7 +13,7 @@
     var nutella = NUTELLA.init('127.0.0.1', 'crepe', 'default', 'demo_run_interface');
     nutella.setResourceId('r_id');
 
-    console.log(nutella.location.resources);
+    nutella.location.ready(function() {console.log(nutella.location.resources);});
 
     // Initialize nutella app interface
 //    var nutella = NUTELLA.initApp('ltg.evl.uic.edu', 'test', 'demo_app_interface');
