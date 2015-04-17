@@ -15,6 +15,10 @@ var nutella_i = require('./nutella_i_browser');
 var nutella = {};
 
 
+// Version number
+nutella.version = '0.5.0';
+
+
 /**
  * Creates a new instance of nutella
  * and initialize it. This is a factory method.
@@ -83,8 +87,6 @@ nutella.parseURLParameters = function () {
     return searchObject;
 };
 
-
-nutella.version = '0.4.3';
 
 
 // Exports nutella object
