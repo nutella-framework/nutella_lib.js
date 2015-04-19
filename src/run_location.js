@@ -93,7 +93,7 @@ function updateResource(resource) {
     var newResource = {};
     newResource.rid = resource.rid;
     if(resource.continuous != undefined) newResource.continuous = resource.continuous;
-    if(resource.discrete != undefined) newResource.continuous = resource.discrete;
+    if(resource.discrete != undefined) newResource.discrete = resource.discrete;
 
     newResource.parameters = [];
 
