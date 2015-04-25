@@ -15,7 +15,7 @@ var nutella = {};
 
 
 // Version number
-nutella.version = '0.5.0';
+nutella.version = '0.5.1';
 
 
 /**

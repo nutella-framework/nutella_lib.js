@@ -4,6 +4,7 @@
 
 
 var AbstractNet = require('./util/net');
+var BinNet = require('./run_net_bin');
 
 
 /**
@@ -15,6 +16,8 @@ var NetSubModule = function(main_nutella) {
     // Store a reference to the main module
     this.nutella = main_nutella;
     this.net = new AbstractNet(main_nutella);
+    // Binary net sub module
+    this.bin = new BinNet(main_nutella, this);
 };
 
 
