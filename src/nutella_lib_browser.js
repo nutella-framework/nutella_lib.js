@@ -9,13 +9,13 @@
  */
 
 var nutella_i = require('./nutella_i_browser');
+var nutella_version = require('./version');
 
 // Internal reference to this library (used below)
 var nutella = {};
 
-
 // Version number
-nutella.version = '0.5.1';
+nutella.version = nutella_version.version;
 
 
 /**

@@ -15,7 +15,7 @@ var BinNetSubModule = function(main_nutella, net_sub_module) {
     // Store a reference to the main module
     this.nutella = main_nutella;
     this.net = net_sub_module;
-    this.file_mngr_url = 'http://' + main_nutella.mqtt_client.client._getHost() + ':57882';
+    this.file_mngr_url = 'http://' + main_nutella.mqtt_client.getHost() + ':57882';
 };
 
 
