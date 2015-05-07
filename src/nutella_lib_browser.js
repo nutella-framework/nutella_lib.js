@@ -71,7 +71,6 @@ nutella.initFramework = function(broker_hostname, component_id) {
 
 /**
  * Utility method that parses URL parameters from the URL.
- * It is obviously only available in the browser.
  *
  * @return {Object} An object containing all the URL query parameters
  */
@@ -84,6 +83,16 @@ nutella.parseURLParameters = function () {
         searchObject[split[0]] = split[1];
     }
     return searchObject;
+};
+
+
+/**
+ * Utility method that parses the component ID from the URL.
+ *
+ * @return {String} the componentId of this component
+ */
+nutella.parseComponentId = function() {
+    return location.pathname.split('/')[4];
 };
 
 

@@ -121,5 +121,15 @@ nutella.parseFrArgs = function() {
 };
 
 
+/**
+ * Utility method that parses the component ID from the URL.
+ *
+ * @return {String} the componentId of this component
+ */
+nutella.parseComponentId = function() {
+    // TODO return location.pathname.split('/')[4];
+};
+
+
 // Exports nutella object
 module.exports = nutella;
