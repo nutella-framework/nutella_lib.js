@@ -72,7 +72,6 @@ nutella.initFramework = function(broker_hostname, component_id) {
 
 /**
  * Utility method that parses URL parameters from the URL.
- * It is obviously only available in the browser.
  *
  * @return {Object} An object containing all the URL query parameters
  */
@@ -85,6 +84,16 @@ nutella.parseURLParameters = function () {
         searchObject[split[0]] = split[1];
     }
     return searchObject;
+};
+
+
+/**
+ * Utility method that parses the component ID from the URL.
+ *
+ * @return {String} the componentId of this component
+ */
+nutella.parseComponentId = function() {
+    return location.pathname.split('/')[4];
 };
 
 
@@ -2951,6 +2960,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.5.2';
+module.exports.version = '0.5.3';
 },{}]},{},[1])(1)
 });
