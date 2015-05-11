@@ -2,7 +2,10 @@ var LocationSubModule = function(main_nutella) {
     this.nutella = main_nutella;
 
     this._resources = {};
-    this._initialized = false;
+    this._room = undefined;
+
+    this._resourcesReady = false;
+    this._roomReady = false;
 
     var self = this;
 
@@ -11,9 +14,9 @@ var LocationSubModule = function(main_nutella) {
         reply.resources.forEach(function(resource) {
             self._resources[resource.rid] = resource;
         });
-        this._initialized = true;
+        self._resourcesReady = true;
 
-        if(readyCallback != undefined) {
+        if(self._roomReady == true && readyCallback != undefined) {
             readyCallback();
         }
     });
@@ -40,6 +43,21 @@ var LocationSubModule = function(main_nutella) {
         resources.forEach(function(resource) {
             delete self._resources[resource.rid];
         });
+    });
+
+    // Download the room dimension
+    this.nutella.net.request("location/room", {}, function(reply) {
+        self._room = reply;
+        self._roomReady = true;
+
+        if(self._resourcesReady == true && readyCallback != undefined) {
+            readyCallback();
+        }
+    });
+
+    // Update room dimension
+    this.nutella.net.subscribe("location/room/updated", function(message) {
+        self._room = message;
     });
 };
 
@@ -86,6 +104,12 @@ Object.defineProperty(LocationSubModule.prototype, 'resource', {
             });
         });
         return resource;
+    }
+});
+
+Object.defineProperty(LocationSubModule.prototype, 'room', {
+    get: function() {
+        return this._room;
     }
 });
 
