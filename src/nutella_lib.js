@@ -14,6 +14,7 @@ var nutella_version = require('./version');
 // Internal reference to this library (used below)
 var nutella = {};
 
+
 // Version number
 nutella.version = nutella_version.version;
 
@@ -29,7 +30,7 @@ nutella.version = nutella_version.version;
  */
 nutella.init = function(broker_hostname, app_id, run_id, component_id) {
     if (broker_hostname===undefined || app_id===undefined || run_id===undefined || component_id=== undefined) {
-        console.warn("Couldn't initialize nutella. Make sure you are setting all four required parameters (broker_hostname, app_id, run_id, component_id)");
+        console.warn("Couldn't initialize nutella. Make sure you are setting all four the required parameters (broker_hostname, app_id, run_id, component_id)");
     }
     return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id);
 };
@@ -42,31 +43,15 @@ nutella.init = function(broker_hostname, app_id, run_id, component_id) {
  *
  * @param {string} broker_hostname - the hostname of the broker.*
  * @param {string} app_id - the app_id this component belongs to
+ * @param {string} run_id - the run_id this component is launched in
  * @param {string} component_id - the name of this component
  */
 nutella.initApp = function(broker_hostname, app_id, component_id) {
     if (broker_hostname===undefined || app_id===undefined || component_id=== undefined) {
-        console.warn("Couldn't initialize nutella. Make sure you are setting all three required parameters (broker_hostname, app_id, component_id)");
+        console.warn("Couldn't initialize nutella. Make sure you are setting all three the required parameters (broker_hostname, app_id, run_id, component_id)");
     }
     return new nutella_i.AppNutellaInstance(broker_hostname, app_id, component_id);
 };
-
-
-/**
- * Creates a new instance of nutella
- * and initialize it for a framework-level component.
- * This is a factory method.
- *
- * @param {string} broker_hostname - the hostname of the broker.*
- * @param {string} component_id - the name of this component
- */
-nutella.initFramework = function(broker_hostname, component_id) {
-    if (broker_hostname===undefined || component_id=== undefined) {
-        console.warn("Couldn't initialize nutella. Make sure you are setting all two required parameters (broker_hostname, component_id)");
-    }
-    return new nutella_i.FrNutellaInstance(broker_hostname, component_id);
-};
-
 
 
 /**
@@ -122,13 +107,14 @@ nutella.parseFrArgs = function() {
 
 
 /**
- * Utility method that parses the component ID from the URL.
+ * Utility method that parses the component ID from the command line.
  *
  * @return {String} the componentId of this component
  */
 nutella.parseComponentId = function() {
-    // TODO return location.pathname.split('/')[4];
+    return process.cwd().split("/").pop();
 };
+
 
 
 // Exports nutella object

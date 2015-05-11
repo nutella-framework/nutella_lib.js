@@ -14,6 +14,7 @@ var nutella_version = require('./version');
 // Internal reference to this library (used below)
 var nutella = {};
 
+
 // Version number
 nutella.version = nutella_version.version;
 
@@ -71,6 +72,7 @@ nutella.initFramework = function(broker_hostname, component_id) {
 
 /**
  * Utility method that parses URL parameters from the URL.
+ * It is obviously only available in the browser.
  *
  * @return {Object} An object containing all the URL query parameters
  */

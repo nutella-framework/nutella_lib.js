@@ -1,18 +1,24 @@
 var NUTELLA = require('../src/nutella_lib');
 
 // Access the current version of the library
-//NUTELLA.version;
+NUTELLA.version;
 
 // Parse the command line parameters
-//NUTELLA.parseArgs();
-//NUTELLA.parseAppArgs();
-//NUTELLA.parseFrArgs();
+NUTELLA.parseArgs();
+NUTELLA.parseAppArgs();
+NUTELLA.parseFrArgs();
+
+// Parse the componentId from the bot directory
+NUTELLA.parseComponentId();
 
 // Initialize nutella
-var nutella = NUTELLA.init('ltg.evl.uic.edu', 'my_app_id', 'my_run_id', 'demo_node_bot');
+var nutella = NUTELLA.init('127.0.0.1', 'crepe', 'default', 'demo_run_interface');
 
 // Set resource id
 nutella.setResourceId('r_id');
+
+// Get all resources
+nutella.location.ready(function() {console.log(nutella.location.resources);});
 
 //nutella.log.test();
 //nutella.net.publish('channel', 'message');

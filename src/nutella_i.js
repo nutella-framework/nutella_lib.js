@@ -8,6 +8,7 @@ var SimpleMQTTClient = require('simple-mqtt-client');
 var AppSubModule = require('./app_core');
 var NetSubModule = require('./run_net');
 var LogSubModule = require('./run_log');
+var LocationSubModule = require ('./run_location');
 var PersistSubModule = require('./run_persist');
 
 
@@ -28,6 +29,7 @@ var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id
     // Initialized the various sub-modules
     this.net = new NetSubModule(this);
     this.log = new LogSubModule(this);
+    this.location = new LocationSubModule(this);
     this.persist = new PersistSubModule(this);
 };
 
