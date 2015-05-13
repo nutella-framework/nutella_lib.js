@@ -1,6 +1,6 @@
 {
   "name": "nutella_lib",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "Nutella library for JavaScript",
   "main": "src/nutella_lib.js",
   "browser": "src/nutella_lib_browser.js",
@@ -12,6 +12,8 @@
     "url": "https://github.com/nutella-framework/nutella_lib.js"
   },
   "dependencies": {
+    "mkdirp": "^0.5.0",
+    "mongodb": "^2.0.31",
     "spark-md5": "0.0.5"
   },
   "devDependencies": {
