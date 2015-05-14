@@ -1,6 +1,7 @@
-# npm modules (except simple-mqtt-client)
-node_modules/*
-!node_modules/simple-mqtt-client
+# npm modules
+node_modules/
+
+# Documentation
 docs/
 
 # Mac

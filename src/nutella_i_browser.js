@@ -2,7 +2,7 @@
  * Run-level and App-level Nutella instances for the browser
  */
 
-var SimpleMQTTClient = require('simple-mqtt-client');
+var SimpleMQTTClient = require('./simple-mqtt-client/client-browser');
 
 // Require various sub-modules
 var AppSubModule = require('./app_core_browser');
