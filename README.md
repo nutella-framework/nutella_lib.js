@@ -23,6 +23,8 @@ For developers working on the library. We are using gulp + browserify + watchify
 ## Releasing a new version
 For developers working on the library, to release a new version:
 
-1. Update the version in `package.json` and `src/version.js` and commit
+1. Update the version in `package.json` and `src/version.js` 
+1. Run gulp to generate distribution for the browser
+1. Commit
 1. Tag version (`git tag -a vx.y.z -m 'A message'`) and push tag (`git push origin --tags`)
 1. Publish to npm (`npm publish`)
