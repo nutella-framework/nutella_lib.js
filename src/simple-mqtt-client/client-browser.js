@@ -11,21 +11,17 @@ var mqtt_lib = require('./paho/mqttws31');
  * Defines a Simple MQTT client.
  *
  * @param {string} host - the hostname of the broker.
- * @param {string} [clientId]  - the unique name of this client. If no ID is provided a random one is generated
+ * @param {function} [err_cb] - optional callback fired whenever an error occurs
  */
-var SimpleMQTTClient = function (host, clientId) {
+var SimpleMQTTClient = function (host, err_cb) {
     // Initializes the object that stores subscriptions
     this.subscriptions = {};
     // Initializes the object that holds the internal client
     this.client = {};
     // Functions backlog
     this.backlog = [];
-    // Handles the optional clientId parameter
-    if (arguments.length === 1 || clientId === undefined) {
-        clientId = generateRandomClientId();
-    }
     // Connect
-    this.client = connectBrowser(this.subscriptions, this.backlog, host, clientId);
+    this.client = connectBrowser(this.subscriptions, this.backlog, host, err_cb);
 };
 
 //
@@ -44,9 +40,9 @@ function generateRandomClientId() {
 //
 // Helper function that connects the MQTT client in the browser
 //
-function connectBrowser (subscriptions, backlog, host, clientId) {
+function connectBrowser (subscriptions, backlog, host, err_cb) {
     // Create client
-    var client = new mqtt_lib.Client(host, Number(1884), clientId);
+    var client = new mqtt_lib.Client(host, Number(1884), generateRandomClientId());
     // Register callback for connection lost
     client.onConnectionLost = function() {
         // TODO try to reconnect
@@ -72,7 +68,13 @@ function connectBrowser (subscriptions, backlog, host, clientId) {
         backlog.forEach(function(e) {
             e.op.apply(this, e.params);
         });
-    }});
+    },
+        onFailure: function() {
+            if (err_cb!==undefined)
+                err_cb();
+            else
+                console.error('There was a problem initializing nutella.');
+        }});
     return client;
 }
 
