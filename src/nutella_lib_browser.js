@@ -28,11 +28,11 @@ nutella.version = nutella_version.version;
  * @param {string} run_id - the run_id this component is launched in
  * @param {string} component_id - the name of this component
  */
-nutella.init = function(broker_hostname, app_id, run_id, component_id, err_cb) {
+nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb) {
     if (broker_hostname===undefined || app_id===undefined || run_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all four required parameters (broker_hostname, app_id, run_id, component_id)");
     }
-    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, err_cb);
+    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
 };
 
 
@@ -45,11 +45,11 @@ nutella.init = function(broker_hostname, app_id, run_id, component_id, err_cb) {
  * @param {string} app_id - the app_id this component belongs to
  * @param {string} component_id - the name of this component
  */
-nutella.initApp = function(broker_hostname, app_id, component_id, err_cb) {
+nutella.initApp = function(broker_hostname, app_id, component_id, done_cb) {
     if (broker_hostname===undefined || app_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all three required parameters (broker_hostname, app_id, component_id)");
     }
-    return new nutella_i.AppNutellaInstance(broker_hostname, app_id, component_id, err_cb);
+    return new nutella_i.AppNutellaInstance(broker_hostname, app_id, component_id, done_cb);
 };
 
 
@@ -61,11 +61,11 @@ nutella.initApp = function(broker_hostname, app_id, component_id, err_cb) {
  * @param {string} broker_hostname - the hostname of the broker.*
  * @param {string} component_id - the name of this component
  */
-nutella.initFramework = function(broker_hostname, component_id, err_cb) {
+nutella.initFramework = function(broker_hostname, component_id, done_cb) {
     if (broker_hostname===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all two required parameters (broker_hostname, component_id)");
     }
-    return new nutella_i.FrNutellaInstance(broker_hostname, component_id, err_cb);
+    return new nutella_i.FrNutellaInstance(broker_hostname, component_id, done_cb);
 };
 
 

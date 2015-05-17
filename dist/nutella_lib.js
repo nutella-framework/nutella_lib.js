@@ -29,11 +29,11 @@ nutella.version = nutella_version.version;
  * @param {string} run_id - the run_id this component is launched in
  * @param {string} component_id - the name of this component
  */
-nutella.init = function(broker_hostname, app_id, run_id, component_id, err_cb) {
+nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb) {
     if (broker_hostname===undefined || app_id===undefined || run_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all four required parameters (broker_hostname, app_id, run_id, component_id)");
     }
-    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, err_cb);
+    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
 };
 
 
@@ -46,11 +46,11 @@ nutella.init = function(broker_hostname, app_id, run_id, component_id, err_cb) {
  * @param {string} app_id - the app_id this component belongs to
  * @param {string} component_id - the name of this component
  */
-nutella.initApp = function(broker_hostname, app_id, component_id, err_cb) {
+nutella.initApp = function(broker_hostname, app_id, component_id, done_cb) {
     if (broker_hostname===undefined || app_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all three required parameters (broker_hostname, app_id, component_id)");
     }
-    return new nutella_i.AppNutellaInstance(broker_hostname, app_id, component_id, err_cb);
+    return new nutella_i.AppNutellaInstance(broker_hostname, app_id, component_id, done_cb);
 };
 
 
@@ -62,11 +62,11 @@ nutella.initApp = function(broker_hostname, app_id, component_id, err_cb) {
  * @param {string} broker_hostname - the hostname of the broker.*
  * @param {string} component_id - the name of this component
  */
-nutella.initFramework = function(broker_hostname, component_id, err_cb) {
+nutella.initFramework = function(broker_hostname, component_id, done_cb) {
     if (broker_hostname===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all two required parameters (broker_hostname, component_id)");
     }
-    return new nutella_i.FrNutellaInstance(broker_hostname, component_id, err_cb);
+    return new nutella_i.FrNutellaInstance(broker_hostname, component_id, done_cb);
 };
 
 
@@ -1648,9 +1648,9 @@ var LocationSubModule = require('./run_location');
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, err_cb) {
+var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.appId = app_id;
     this.runId = run_id;
     this.componentId = component_id;
@@ -1681,9 +1681,9 @@ RunNutellaInstance.prototype.setResourceId = function(resource_id){
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var AppNutellaInstance = function (broker_hostname, app_id, component_id, err_cb) {
+var AppNutellaInstance = function (broker_hostname, app_id, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.appId = app_id;
     this.componentId = component_id;
     // Initialized the various sub-modules
@@ -1720,9 +1720,9 @@ AppNutellaInstance.prototype.setResourceId = function(resource_id){
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var FrNutellaInstance = function (broker_hostname, component_id, err_cb) {
+var FrNutellaInstance = function (broker_hostname, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.componentId = component_id;
     // Initialize the various sub-modules
     this.f = new FrSubModule(this);
@@ -2360,7 +2360,7 @@ var mqtt_lib = require('./paho/mqttws31');
  * @param {string} host - the hostname of the broker.
  * @param {function} [err_cb] - optional callback fired whenever an error occurs
  */
-var SimpleMQTTClient = function (host, err_cb) {
+var SimpleMQTTClient = function (host, done_cb) {
     // Initializes the object that stores subscriptions
     this.subscriptions = {};
     // Initializes the object that holds the internal client
@@ -2368,7 +2368,7 @@ var SimpleMQTTClient = function (host, err_cb) {
     // Functions backlog
     this.backlog = [];
     // Connect
-    this.client = connectBrowser(this.subscriptions, this.backlog, host, err_cb);
+    this.client = connectBrowser(this.subscriptions, this.backlog, host, done_cb);
 };
 
 //
@@ -2387,7 +2387,7 @@ function generateRandomClientId() {
 //
 // Helper function that connects the MQTT client in the browser
 //
-function connectBrowser (subscriptions, backlog, host, err_cb) {
+function connectBrowser (subscriptions, backlog, host, done_cb) {
     // Create client
     var client = new mqtt_lib.Client(host, Number(1884), generateRandomClientId());
     // Register callback for connection lost
@@ -2411,14 +2411,18 @@ function connectBrowser (subscriptions, backlog, host, err_cb) {
     };
     // Connect
     client.connect({onSuccess: function() {
+        // Execute optional done callback passing true
+        if (done_cb!==undefined)
+            done_cb(true);
         // Execute the backlog of operations performed while the client wasn't connected
         backlog.forEach(function(e) {
             e.op.apply(this, e.params);
         });
     },
         onFailure: function() {
-            if (err_cb!==undefined)
-                err_cb();
+            // Execute optional done callback passing false
+            if (done_cb!==undefined)
+                done_cb(false);
             else
                 console.error('There was a problem initializing nutella.');
         }});
@@ -5118,6 +5122,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.5.7';
+module.exports.version = '0.5.9';
 },{}]},{},[1])(1)
 });

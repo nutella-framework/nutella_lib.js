@@ -20,9 +20,9 @@ var LocationSubModule = require('./run_location');
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, err_cb) {
+var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.appId = app_id;
     this.runId = run_id;
     this.componentId = component_id;
@@ -53,9 +53,9 @@ RunNutellaInstance.prototype.setResourceId = function(resource_id){
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var AppNutellaInstance = function (broker_hostname, app_id, component_id, err_cb) {
+var AppNutellaInstance = function (broker_hostname, app_id, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.appId = app_id;
     this.componentId = component_id;
     // Initialized the various sub-modules
@@ -92,9 +92,9 @@ AppNutellaInstance.prototype.setResourceId = function(resource_id){
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var FrNutellaInstance = function (broker_hostname, component_id, err_cb) {
+var FrNutellaInstance = function (broker_hostname, component_id, done_cb) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, err_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
     this.componentId = component_id;
     // Initialize the various sub-modules
     this.f = new FrSubModule(this);
