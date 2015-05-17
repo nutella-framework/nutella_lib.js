@@ -4978,6 +4978,7 @@ AbstractNet.prototype.request_to = function( channel, message, callback, appId, 
 AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, runId, done_callback) {
     // Save nutella reference
     var nut = this.nutella;
+    var abstract_net = this;
     // Pad channel
     var padded_channel = this.pad_channel(channel, appId, runId);
     var mqtt_cb = function(request) {
@@ -4987,7 +4988,7 @@ AbstractNet.prototype.handle_requests_on = function( channel, callback, appId, r
             // Only handle requests that have proper id set
             if(f.type!=='request' || f.id===undefined) return;
             // Execute callback and send response
-            var m = this.prepare_message_for_response(callback(f.payload, f.from), f.id);
+            var m = abstract_net.prepare_message_for_response(callback(f.payload, f.from), f.id);
             nut.mqtt_client.publish( padded_channel, m );
         } catch(e) {
             if (e instanceof SyntaxError) {
