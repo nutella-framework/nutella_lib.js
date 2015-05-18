@@ -1759,8 +1759,10 @@ module.exports = {
     FrNutellaInstance : FrNutellaInstance
 };
 },{"./app_core_browser":3,"./fr_core_browser":6,"./run_location":10,"./run_log":11,"./run_net":12,"./simple-mqtt-client/client-browser":14}],10:[function(require,module,exports){
+var nutella;
 var LocationSubModule = function(main_nutella) {
     this.nutella = main_nutella;
+    nutella = this.nutella;
 
     this._resources = {};
     this._room = undefined;
@@ -5123,6 +5125,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.6.0';
+module.exports.version = '0.6.1';
 },{}]},{},[1])(1)
 });
