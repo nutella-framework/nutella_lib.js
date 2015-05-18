@@ -31,6 +31,10 @@ var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id
     this.log = new LogSubModule(this);
     this.location = new LocationSubModule(this);
     this.persist = new PersistSubModule(this);
+    // Start pinging
+    setInterval(function(){
+        this.net.publish('pings', 'ping');
+    }.bind(this),5000);
 };
 
 /**
