@@ -156,6 +156,9 @@ function generateVirtualResource(resource) {
         },
         get discrete() {
             return {x: resource.proximity.discrete.x, y: resource.proximity.discrete.y};
+        },
+        get distance() {
+            return resource.proximity.distance;
         }
     };
 
