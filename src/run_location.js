@@ -1,5 +1,7 @@
+var nutella;
 var LocationSubModule = function(main_nutella) {
     this.nutella = main_nutella;
+    nutella = this.nutella;
 
     this._resources = {};
     this._room = undefined;
