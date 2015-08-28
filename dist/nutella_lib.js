@@ -1760,11 +1760,15 @@ module.exports = {
 };
 },{"./app_core_browser":3,"./fr_core_browser":6,"./run_location":10,"./run_log":11,"./run_net":12,"./simple-mqtt-client/client-browser":14}],10:[function(require,module,exports){
 var nutella;
+
+var _resources;
+
 var LocationSubModule = function(main_nutella) {
     this.nutella = main_nutella;
     nutella = this.nutella;
 
     this._resources = {};
+    _resources = this._resources;   // Global variable
     this._room = undefined;
 
     this._resourcesReady = false;
@@ -1844,7 +1848,7 @@ Object.defineProperty(LocationSubModule.prototype, 'resources', {
         var resources = [];
 
         Object.keys(this._resources).forEach(function(key) {
-            resources.push(self._resources[key]);
+            resources.push(generateVirtualResource(self._resources[key]));
         });
         return resources;
     }
@@ -1893,35 +1897,37 @@ function updateResource(resource) {
 
 function generateVirtualResource(resource) {
     var virtualResource = {};
+    var rid = resource.rid;
     Object.defineProperty(virtualResource, 'rid', {
         get: function() {
+            var resource = _resources[rid];
             return resource.rid;
         }
     });
     virtualResource.continuous = {
-        get x() { return resource.continuous.x; },
-        set x(value) { resource.continuous.x = value; updateResource(resource); },
+        get x() { return _resources[rid].continuous.x; },
+        set x(value) { _resources[rid].continuous.x = value; updateResource(_resources[rid]); },
 
-        get y() { return resource.continuous.y; },
-        set y(value) { resource.continuous.y = value; updateResource(resource); }
+        get y() { return _resources[rid].continuous.y; },
+        set y(value) { _resources[rid].continuous.y = value; updateResource(_resources[rid]); }
     };
     virtualResource.discrete = {
-        get x() { return resource.discrete.x; },
-        set x(value) { resource.discrete.x = value; updateResource(resource); },
+        get x() { return _resources[rid].discrete.x; },
+        set x(value) { _resources[rid].discrete.x = value; updateResource(_resources[rid]); },
 
-        get y() { return resource.discrete.y; },
-        set y(value) { resource.discrete.y = value; updateResource(resource); }
+        get y() { return _resources[rid].discrete.y; },
+        set y(value) { _resources[rid].discrete.y = value; updateResource(_resources[rid]); }
     };
     virtualResource.proximity = {
-        get rid() { return resource.proximity.rid; },
+        get rid() { return _resources[rid].proximity.rid; },
         get continuous() {
-            return {x: resource.proximity.continuous.x, y: resource.proximity.continuous.y};
+            return {x: _resources[rid].proximity.continuous.x, y: _resources[rid].proximity.continuous.y};
         },
         get discrete() {
-            return {x: resource.proximity.discrete.x, y: resource.proximity.discrete.y};
+            return {x: _resources[rid].proximity.discrete.x, y: _resources[rid].proximity.discrete.y};
         },
         get distance() {
-            return resource.proximity.distance;
+            return _resources[rid].proximity.distance;
         }
     };
 
@@ -2004,7 +2010,7 @@ function generateVirtualResource(resource) {
 
     var parameters = [];
     for(p in resource.parameters) {
-        parameters.push({value: resource.parameters[p], key: p});
+        parameters.push({value: _resources[rid].parameters[p], key: p});
     }
     parameters.forEach(function(p) {
         Object.defineProperty(virtualResource.parameter, p.key, {
@@ -2012,8 +2018,8 @@ function generateVirtualResource(resource) {
                 return p.value;
             },
             set: function(value) {
-                resource.parameters[p.key] = value;
-                updateResource(resource);
+                _resources[rid].parameters[p.key] = value;
+                updateResource(_resources[rid]);
             }
         });
     });
