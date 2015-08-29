@@ -1904,6 +1904,18 @@ function generateVirtualResource(resource) {
             return resource.rid;
         }
     });
+    Object.defineProperty(virtualResource, 'model', {
+        get: function() {
+            var resource = _resources[rid];
+            return resource.model;
+        }
+    });
+    Object.defineProperty(virtualResource, 'type', {
+        get: function() {
+            var resource = _resources[rid];
+            return resource.type;
+        }
+    });
     virtualResource.continuous = {
         get x() { return _resources[rid].continuous.x; },
         set x(value) { _resources[rid].continuous.x = value; updateResource(_resources[rid]); },
@@ -5134,6 +5146,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.6.2';
+module.exports.version = '0.6.4';
 },{}]},{},[1])(1)
 });

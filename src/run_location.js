@@ -143,6 +143,18 @@ function generateVirtualResource(resource) {
             return resource.rid;
         }
     });
+    Object.defineProperty(virtualResource, 'model', {
+        get: function() {
+            var resource = _resources[rid];
+            return resource.model;
+        }
+    });
+    Object.defineProperty(virtualResource, 'type', {
+        get: function() {
+            var resource = _resources[rid];
+            return resource.type;
+        }
+    });
     virtualResource.continuous = {
         get x() { return _resources[rid].continuous.x; },
         set x(value) { _resources[rid].continuous.x = value; updateResource(_resources[rid]); },
