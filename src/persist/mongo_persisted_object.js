@@ -63,15 +63,12 @@ var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
         MongoClient.connect('mongodb://' +  this.host() + ':27017/' + this.db(), (function(err, db) {
             if(err) return;
             var collection = db.collection(cname);
-            console.log(this);
             if(this['_id']) {
-                console.log('update');
                 collection.update({_id: this['id']}, this, function(){
                 });
             }
             else {
                 this['_id'] = this.doc();
-                console.log('insert');
                 collection.insert(this, function(){
                 });
             }
