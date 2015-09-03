@@ -5146,6 +5146,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.6.6';
+module.exports.version = '0.6.8';
 },{}]},{},[1])(1)
 });
