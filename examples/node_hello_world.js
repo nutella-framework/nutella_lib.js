@@ -17,6 +17,14 @@ var nutella = NUTELLA.init('127.0.0.1', 'hunger-games', 'default', 'demo_run_int
 // Set resource id
 nutella.setResourceId('r_id');
 
+var state = nutella.persist.getMongoObjectStore('state');
+
+state.load(function() {
+    console.log('All loaded');
+    console.log(state);
+
+});
+
 // Get all resources
 //nutella.location.ready(function() {console.log(nutella.location.resources);});
 

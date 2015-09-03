@@ -2,6 +2,7 @@
  * Persists a javascript object with inside a MongoDB document
  */
 
+var MongoClient = require('mongodb').MongoClient;
 
 /**
  * Creates a new persisted object
@@ -31,15 +32,48 @@ var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
     /**
      * Loads the persisted object into memory
      */
-    Object.prototype.load = function() {
+    Object.prototype.load = function(finished) {
+        var cname = this.mongoCollection();
+        MongoClient.connect('mongodb://' +  this.host() + ':27017/' + this.db(), (function(err, db) {
+            if(err) return;
+            var collection = db.collection(cname);
+            collection.find({}).toArray(function(err, docs) {
+                if(err || docs.length < 1) {
+                    finished();
+                    return;
+                }
 
+                var doc = docs[0];
+                // Copy all the properties
+                for (var k in doc) {
+                    if (doc.hasOwnProperty(k)) {
+                        this[k] = doc[k];
+                    }
+                }
+                finished();
+            }.bind(this));
+        }).bind(this));
     };
 
     /**
      * Persists the object inside the mongo document
      */
     Object.prototype.save = function() {
+        var cname = this.mongoCollection();
+        MongoClient.connect('mongodb://' +  this.host() + ':27017/' + this.db(), (function(err, db) {
+            if(err) return;
+            var collection = db.collection(cname);
+            console.log(this);
+            if(this['_id']) {
+                collection.update({_id: this['id']}, this, function(){
+                });
+            }
+            else {
+                collection.insert(this, function(){
+                });
+            }
 
+        }).bind(this));
     };
 
     // Create instance and return it
