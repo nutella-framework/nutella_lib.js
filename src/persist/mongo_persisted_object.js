@@ -2,7 +2,7 @@
  * Persists a javascript object with inside a MongoDB document
  */
 
-var MongoClient = require('mongodb').MongoClient;
+var mongoCache = require('./mongo_cache');
 
 /**
  * Creates a new persisted object
@@ -13,28 +13,33 @@ var MongoClient = require('mongodb').MongoClient;
  * @return {Object}
  */
 var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
+
+    var object = function() {
+
+    };
+
     /**
      * Store the parameters
      */
-    Object.prototype.host = function() {
+    object.prototype.host = function() {
         return mongo_host;
     };
-    Object.prototype.db = function() {
+    object.prototype.db = function() {
         return db;
     };
-    Object.prototype.mongoCollection = function() {
+    object.prototype.mongoCollection = function() {
         return collection;
     };
-    Object.prototype.doc = function() {
+    object.prototype.doc = function() {
         return doc_id;
     };
 
     /**
      * Loads the persisted object into memory
      */
-    Object.prototype.load = function(finished) {
+    object.prototype.load = function(finished) {
         var cname = this.mongoCollection();
-        MongoClient.connect('mongodb://' +  this.host() + ':27017/' + this.db(), (function(err, db) {
+        mongoCache.getConnection(this.host(), this.db(), (function(err, db) {
             if(err) return;
             var collection = db.collection(cname);
             collection.find({_id: this.doc()}).toArray(function(err, docs) {
@@ -58,9 +63,9 @@ var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
     /**
      * Persists the object inside the mongo document
      */
-    Object.prototype.save = function() {
+    object.prototype.save = function() {
         var cname = this.mongoCollection();
-        MongoClient.connect('mongodb://' +  this.host() + ':27017/' + this.db(), (function(err, db) {
+        mongoCache.getConnection(this.host(), this.db(), (function(err, db) {
             if(err) return;
             var collection = db.collection(cname);
             if(this['_id']) {
@@ -72,12 +77,11 @@ var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
                 collection.insert(this, function(){
                 });
             }
-
         }).bind(this));
     };
 
     // Create instance and return it
-    return {};
+    return new object();
 };
 
 
