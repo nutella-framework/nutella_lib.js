@@ -22,9 +22,9 @@ var state = nutella.persist.getMongoObjectStore('state');
 state.load(function() {
     console.log('All loaded');
 
-    //state['lol'] = {bau: 'miao', array: [1,2]};
-
     console.log(state);
+
+    state['lol'] = {bau: 'miao', array: [1,2]};
 
     state.save();
 

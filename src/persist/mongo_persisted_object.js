@@ -64,7 +64,7 @@ var MongoPersistedObject = function(mongo_host, db, collection, doc_id) {
             if(err) return;
             var collection = db.collection(cname);
             if(this['_id']) {
-                collection.update({_id: this['id']}, this, function(){
+                collection.update({_id: this['_id']}, this, function(){
                 });
             }
             else {
