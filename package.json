@@ -1,6 +1,6 @@
 {
   "name": "nutella_lib",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "Nutella library for JavaScript",
   "main": "src/nutella_lib.js",
   "browser": "src/nutella_lib_browser.js",
