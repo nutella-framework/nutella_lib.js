@@ -28,11 +28,17 @@ nutella.version = nutella_version.version;
  * @param {string} run_id - the run_id this component is launched in
  * @param {string} component_id - the name of this component
  */
-nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb) {
+nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb, options) {
     if (broker_hostname===undefined || app_id===undefined || run_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all four required parameters (broker_hostname, app_id, run_id, component_id)");
     }
-    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
+    if (options != undefined && options.secure == true) {
+        console.log("Nutella is using secure web sockets");
+        return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb, options.secure);
+    }
+    else {
+        return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
+    }
 };
 
 

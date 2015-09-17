@@ -29,11 +29,17 @@ nutella.version = nutella_version.version;
  * @param {string} run_id - the run_id this component is launched in
  * @param {string} component_id - the name of this component
  */
-nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb) {
+nutella.init = function(broker_hostname, app_id, run_id, component_id, done_cb, options) {
     if (broker_hostname===undefined || app_id===undefined || run_id===undefined || component_id=== undefined) {
         console.warn("Couldn't initialize nutella. Make sure you are setting all four required parameters (broker_hostname, app_id, run_id, component_id)");
     }
-    return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
+    if (options != undefined && options.secure == true) {
+        console.log("Nutella is using secure web sockets");
+        return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb, options.secure);
+    }
+    else {
+        return new nutella_i.RunNutellaInstance(broker_hostname, app_id, run_id, component_id, done_cb);
+    }
 };
 
 
@@ -1648,9 +1654,9 @@ var LocationSubModule = require('./run_location');
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb) {
+var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb, secure) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb, secure);
     this.appId = app_id;
     this.runId = run_id;
     this.componentId = component_id;
@@ -2383,7 +2389,7 @@ var mqtt_lib = require('./paho/mqttws31');
  * @param {string} host - the hostname of the broker.
  * @param {function} [err_cb] - optional callback fired whenever an error occurs
  */
-var SimpleMQTTClient = function (host, done_cb) {
+var SimpleMQTTClient = function (host, done_cb, secure) {
     // Initializes the object that stores subscriptions
     this.subscriptions = {};
     // Initializes the object that holds the internal client
@@ -2391,7 +2397,7 @@ var SimpleMQTTClient = function (host, done_cb) {
     // Functions backlog
     this.backlog = [];
     // Connect
-    this.client = connectBrowser(this.subscriptions, this.backlog, host, done_cb);
+    this.client = connectBrowser(this.subscriptions, this.backlog, host, done_cb, secure);
 };
 
 //
@@ -2410,9 +2416,19 @@ function generateRandomClientId() {
 //
 // Helper function that connects the MQTT client in the browser
 //
-function connectBrowser (subscriptions, backlog, host, done_cb) {
+function connectBrowser (subscriptions, backlog, host, done_cb, secure) {
+
+    // Associate the right port
+    var websocket_uri;
+    if(secure == true) {
+        websocket_uri ='wss://' + host + ':1885/mqtt';
+    }
+    else {
+        websocket_uri ='ws://' + host + ':1884/mqtt';
+    }
+
     // Create client
-    var client = new mqtt_lib.Client(host, Number(1884), generateRandomClientId());
+    var client = new mqtt_lib.Client(websocket_uri, generateRandomClientId());
     // Register callback for connection lost
     client.onConnectionLost = function() {
         // TODO try to reconnect
@@ -5146,6 +5162,6 @@ AbstractNet.prototype.prepare_message_for_response = function (response, id) {
 // Export module
 module.exports = AbstractNet;
 },{}],17:[function(require,module,exports){
-module.exports.version = '0.6.10';
+module.exports.version = '0.6.11';
 },{}]},{},[1])(1)
 });

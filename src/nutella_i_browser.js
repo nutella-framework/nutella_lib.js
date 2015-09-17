@@ -20,9 +20,9 @@ var LocationSubModule = require('./run_location');
  * @param {string} broker_hostname - the hostname of the broker.
  * @param {string} component_id - the name of this component
  */
-var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb) {
+var RunNutellaInstance = function (broker_hostname, app_id, run_id, component_id, done_cb, secure) {
     //Initialize parameters
-    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb);
+    this.mqtt_client = new SimpleMQTTClient(broker_hostname, done_cb, secure);
     this.appId = app_id;
     this.runId = run_id;
     this.componentId = component_id;

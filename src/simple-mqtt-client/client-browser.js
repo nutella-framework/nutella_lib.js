@@ -13,7 +13,7 @@ var mqtt_lib = require('./paho/mqttws31');
  * @param {string} host - the hostname of the broker.
  * @param {function} [err_cb] - optional callback fired whenever an error occurs
  */
-var SimpleMQTTClient = function (host, done_cb) {
+var SimpleMQTTClient = function (host, done_cb, secure) {
     // Initializes the object that stores subscriptions
     this.subscriptions = {};
     // Initializes the object that holds the internal client
@@ -21,7 +21,7 @@ var SimpleMQTTClient = function (host, done_cb) {
     // Functions backlog
     this.backlog = [];
     // Connect
-    this.client = connectBrowser(this.subscriptions, this.backlog, host, done_cb);
+    this.client = connectBrowser(this.subscriptions, this.backlog, host, done_cb, secure);
 };
 
 //
@@ -40,9 +40,19 @@ function generateRandomClientId() {
 //
 // Helper function that connects the MQTT client in the browser
 //
-function connectBrowser (subscriptions, backlog, host, done_cb) {
+function connectBrowser (subscriptions, backlog, host, done_cb, secure) {
+
+    // Associate the right port
+    var websocket_uri;
+    if(secure == true) {
+        websocket_uri ='wss://' + host + ':1885/mqtt';
+    }
+    else {
+        websocket_uri ='ws://' + host + ':1884/mqtt';
+    }
+
     // Create client
-    var client = new mqtt_lib.Client(host, Number(1884), generateRandomClientId());
+    var client = new mqtt_lib.Client(websocket_uri, generateRandomClientId());
     // Register callback for connection lost
     client.onConnectionLost = function() {
         // TODO try to reconnect

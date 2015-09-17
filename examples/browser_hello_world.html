@@ -15,7 +15,7 @@
             console.log("Successfully connected nutella!");
         else
             console.log("Error connecting!");
-    });
+    }, {secure: true});
     nutella.setResourceId('r_id');
 
     nutella.location.ready(function() {console.log(nutella.location.resources);});
