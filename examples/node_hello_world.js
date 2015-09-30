@@ -17,6 +17,7 @@ var nutella = NUTELLA.init('127.0.0.1', 'hunger-games', 'default', 'demo_run_int
 // Set resource id
 nutella.setResourceId('r_id');
 
+/*
 var state = nutella.persist.getMongoObjectStore('state');
 var history = nutella.persist.getMongoObjectStore('history');
 
@@ -41,8 +42,20 @@ history.load(function() {
     history.save();
 
 });
+*/
 
+var state = nutella.persist.getMongoCollectionStore('state');
 
+state.load(function() {
+    console.log('state loaded');
+
+    console.log(state);
+
+    state.push([1,2,3]);
+
+    state.save();
+
+});
 
 // Get all resources
 //nutella.location.ready(function() {console.log(nutella.location.resources);});
