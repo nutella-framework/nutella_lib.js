@@ -51,7 +51,7 @@ state.load(function() {
 
     console.log(state);
 
-    state.push([1,2,3]);
+    state.push({a: 1234});
 
     state.save();
 

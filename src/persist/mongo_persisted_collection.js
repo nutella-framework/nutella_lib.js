@@ -73,7 +73,7 @@ var MongoPersistedCollection = function(mongo_host, db, collection) {
                 var collection = db.collection(cname);
                 self.forEach(function(element) {
                     if(element['_id']) {
-                        collection.update({_id: this['_id']}, element, function(){
+                        collection.update({_id: element['_id']}, element, function(){
                         });
                     }
                     else {
